@@ -1,312 +1,174 @@
 # Nuvia — Saúde, movimento e bem-estar em um só lugar
 
-<p align="center">
-  <strong>Cuide da sua rotina. Acompanhe sua evolução.</strong>
-</p>
-
-<p align="center">
-  Um aplicativo de saúde e bem-estar desenvolvido para reunir exercícios físicos, alimentação e sono em uma experiência simples, intuitiva e personalizada.
-</p>
-
----
+> Cuide da sua rotina. Acompanhe sua evolução.
 
 ## Sobre o projeto
 
-O **Nuvia** é um aplicativo de acompanhamento de saúde e bem-estar que tem como objetivo reunir diferentes aspectos da rotina em um único ambiente.
+O **Nuvia** é um aplicativo de acompanhamento de saúde e bem-estar que reúne, em um só lugar, funcionalidades relacionadas à prática de exercícios físicos, alimentação e qualidade do sono.
 
-A proposta surgiu da percepção de que acompanhar a própria evolução física e cuidar da saúde frequentemente exige a utilização de diferentes aplicativos e ferramentas. Além disso, muitas soluções apresentam uma quantidade excessiva de informações e exigem registros constantes, tornando a experiência cansativa.
+O projeto tem como objetivo ajudar os usuários a desenvolver hábitos mais saudáveis, acompanhar sua evolução e manter uma rotina equilibrada por meio de uma experiência simples, intuitiva e visualmente agradável.
 
-O Nuvia busca solucionar esse problema por meio de uma plataforma que integra três pilares:
-
-- **Exercícios físicos:** organização de treinos, acompanhamento de atividades e histórico de desempenho.
-- **Alimentação:** registro e acompanhamento simplificado das refeições.
-- **Bem-estar:** acompanhamento básico do sono e de hábitos relacionados à qualidade de vida.
-
-Além disso, o aplicativo oferece uma área de evolução, permitindo que o usuário visualize seu progresso ao longo do tempo.
-
-O principal princípio do projeto é oferecer uma experiência útil, organizada e agradável, sem exigir que o usuário registre informações em excesso.
+A proposta é oferecer autonomia ao usuário, permitindo que cada pessoa utilize as áreas que fazem sentido para sua rotina, sem exigir o preenchimento excessivo de informações.
 
 ## Objetivos
 
-- Reunir diferentes áreas relacionadas à saúde em uma única plataforma.
+- Reunir diferentes aspectos da saúde e do bem-estar em uma única plataforma.
 - Facilitar o acompanhamento da evolução física.
-- Incentivar a consistência na prática de exercícios e nos cuidados pessoais.
-- Oferecer uma experiência simples, intuitiva e visualmente agradável.
-- Permitir que cada usuário acompanhe as áreas que considera mais importantes.
-- Apresentar informações relevantes sem sobrecarregar a interface.
+- Incentivar a consistência na prática de exercícios.
+- Permitir o acompanhamento básico da alimentação e do sono.
+- Oferecer uma interface moderna, intuitiva e acessível.
+- Tornar o acompanhamento de hábitos mais simples e prático.
 
 ## Funcionalidades
 
-### 1. Início
+### 🏠 Início
+- Visão geral da rotina do usuário.
+- Resumo das atividades e hábitos.
+- Acesso rápido às principais áreas do aplicativo.
 
-A tela inicial funciona como um painel de acompanhamento da rotina, apresentando um resumo das principais informações do usuário.
-
-- Visão geral das atividades.
-- Resumo semanal.
-- Indicadores de exercícios físicos.
-- Resumo de alimentação.
-- Informações sobre o sono.
-- Acesso rápido às demais áreas.
-
-### 2. Exercícios físicos
-
-Área destinada à organização e ao acompanhamento dos treinos.
-
+### 🏋️ Exercícios
 - Criação e gerenciamento de planilhas de treino.
-- Cadastro e organização de exercícios.
-- Definição de séries, repetições e cargas.
-- Acompanhamento de treinos em andamento.
-- Marcação de exercícios e séries concluídas.
-- Opção de finalizar o treino sem registrar individualmente cada exercício.
-- Histórico de atividades realizadas.
+- Organização de exercícios por treino.
+- Registro de exercícios realizados.
+- Acompanhamento de séries e atividades concluídas.
+- Possibilidade de finalizar um treino completo.
 
-### 3. Evolução
+### 📈 Evolução
+- Acompanhamento dos dias de treino.
+- Histórico de atividades físicas.
+- Registro e acompanhamento de peso.
+- Acompanhamento da qualidade e duração do sono.
+- Registro de fotos para comparação da evolução física.
 
-Área dedicada à visualização do progresso do usuário em diferentes aspectos.
-
-**Atividade física**
-- Quantidade de dias com exercícios durante a semana.
-- Número de treinos concluídos.
-- Histórico de frequência.
-- Evolução de cargas e desempenho.
-
-**Sono**
-- Quantidade de noites com sono satisfatório.
-- Média de horas dormidas.
-- Histórico de qualidade do sono.
-
-**Evolução corporal**
-- Registro do peso.
-- Histórico de alterações.
-- Gráficos de acompanhamento.
-- Registro de fotos de progresso.
-- Comparação de fotos de diferentes períodos.
-
-### 4. Alimentação
-
-Área para acompanhamento simplificado da rotina alimentar.
-
+### 🥗 Alimentação
 - Registro de refeições.
-- Identificação do tipo de refeição.
-- Organização das refeições por dia.
-- Histórico alimentar.
-- Visualização das refeições registradas.
+- Organização básica da alimentação diária.
+- Histórico de refeições registradas.
 
-A proposta inicial prioriza a praticidade, evitando a obrigatoriedade de preencher informações nutricionais detalhadas.
+### 🌙 Sono
+- Registro da duração do sono.
+- Acompanhamento da qualidade do descanso.
+- Histórico de noites registradas.
 
-### 5. Sono
+### 👤 Perfil e configurações
+- Gerenciamento das informações do usuário.
+- Definição de objetivos pessoais.
+- Personalização das preferências.
+- Alternância entre tema claro e escuro.
 
-Área destinada ao acompanhamento básico do descanso.
-
-- Registro do horário de dormir.
-- Registro do horário de acordar.
-- Cálculo da duração do sono.
-- Avaliação da qualidade do sono.
-- Histórico de registros.
-- Média de horas dormidas.
-
-### 6. Perfil e objetivos
-
-Área para personalização da experiência.
-
-- Informações pessoais.
-- Definição de objetivos.
-- Preferências do aplicativo.
-- Configurações de aparência.
-- Preferências de notificações e privacidade.
-
-### 7. Resumo semanal
-
-Apresentação consolidada dos principais indicadores da semana:
-
-- Dias de exercícios.
-- Treinos concluídos.
-- Noites de sono satisfatório.
-- Média de horas de sono.
-- Refeições registradas.
-
----
+### 📅 Resumo semanal
+- Visão geral dos hábitos registrados durante a semana.
+- Acompanhamento da frequência de exercícios.
+- Resumo das informações de sono e alimentação.
 
 ## Identidade visual
 
-O Nuvia possui uma identidade visual desenvolvida para transmitir equilíbrio, tecnologia, saúde e bem-estar.
+A identidade visual do Nuvia foi desenvolvida para transmitir modernidade, equilíbrio e personalidade.
 
-A interface utiliza uma combinação de cores inspirada em elementos naturais e tecnológicos, com destaque para tons de azul-petróleo, verde-menta e turquesa.
+A interface utiliza uma combinação de cores contrastantes, com azul-marinho como uma das principais referências visuais, tons claros para proporcionar conforto visual e coral para destacar elementos importantes.
 
-**Paleta de cores principal:**
+### Paleta de cores
 
 | Cor | Código | Aplicação |
 |---|---|---|
-| Azul-petróleo | `#245B63` | Cor principal |
-| Verde-menta | `#8FC9B5` | Elementos de destaque |
-| Verde-claro | `#E5F2ED` | Fundos e superfícies |
-| Fundo claro | `#F8FAF9` | Base da interface |
-| Azul-escuro | `#24363A` | Textos e elementos escuros |
-| Turquesa | `#36B8A7` | Destaques e interações |
-| Lavanda | `#A99AD8` | Cor complementar |
+| Preto carvão | `#1C1C1A` | Textos e elementos escuros |
+| Azul-marinho | `#16336F` | Cor principal da identidade |
+| Creme | `#F0EEDF` | Fundos e superfícies claras |
+| Azul-lavanda | `#B1BFE2` | Elementos secundários e destaques |
+| Coral | `#FE492A` | Botões, ações e destaques |
 
-**Diretrizes de design:**
+### Diretrizes visuais
 
 - Interface moderna e minimalista.
-- Cards independentes e organizados.
-- Gradientes suaves em tons de azul-petróleo e verde-água.
 - Hierarquia visual bem definida.
-- Componentes reutilizáveis.
-- Gráficos e indicadores de fácil compreensão.
-- Layout responsivo.
-- Atenção especial à experiência mobile.
+- Cards independentes e organizados.
+- Uso equilibrado de cores e contrastes.
+- Tipografia limpa e legível.
+- Ícones consistentes.
+- Layout responsivo, com prioridade para dispositivos móveis.
 
-## Tecnologias
+## Tecnologias utilizadas
 
-O projeto utiliza tecnologias voltadas ao desenvolvimento de interfaces web modernas.
+- **React** — construção da interface.
+- **Vite** — ambiente de desenvolvimento.
+- **JavaScript** — lógica e interatividade.
+- **CSS** — estilização e responsividade.
+- **Lucide React** — biblioteca de ícones.
 
-- **React:** construção da interface por meio de componentes.
-- **Vite:** ambiente de desenvolvimento e build.
-- **JavaScript:** implementação das interações e funcionalidades.
-- **CSS:** estilização e responsividade.
-- **Lucide React:** biblioteca de ícones.
-
-> As tecnologias e versões devem corresponder à configuração efetivamente utilizada no projeto.
-
-## Estrutura do projeto
-
-O projeto é organizado para facilitar a manutenção, a reutilização de componentes e a evolução das funcionalidades.
-
-A estrutura de referência é:
-
-```text
-nuvia/
-├── public/
-├── src/
-│   ├── assets/
-│   ├── components/
-│   ├── pages/
-│   │   ├── Home/
-│   │   ├── Workouts/
-│   │   ├── Evolution/
-│   │   ├── Nutrition/
-│   │   ├── Sleep/
-│   │   ├── Profile/
-│   │   └── Settings/
-│   ├── styles/
-│   ├── hooks/
-│   ├── utils/
-│   ├── App.jsx
-│   └── main.jsx
-├── index.html
-├── package.json
-└── README.md
-```
-
-*Estrutura ilustrativa: a organização acima representa a separação conceitual dos módulos e pode variar conforme a implementação atual.*
-
-## Como executar o projeto
+## Execução do projeto
 
 ### Pré-requisitos
 
-- [Node.js](https://nodejs.org/)
-- npm (instalado junto com o Node.js)
-- Git (opcional, para clonar o repositório)
+- Node.js instalado.
+- npm instalado.
 
-### 1. Clone o repositório
+### Instalação
+
+Clone o repositório:
 
 ```bash
 git clone URL_DO_REPOSITORIO
 ```
 
-### 2. Acesse a pasta
+Entre na pasta do projeto:
 
 ```bash
 cd nuvia
 ```
 
-### 3. Instale as dependências
+Instale as dependências:
 
 ```bash
 npm install
 ```
 
-### 4. Execute o projeto
+Inicie o servidor de desenvolvimento:
 
 ```bash
 npm run dev
 ```
 
-### 5. Acesse no navegador
+Após iniciar, acesse o endereço disponibilizado pelo Vite no terminal.
 
-O Vite disponibilizará um endereço local, normalmente:
-
-```text
-http://localhost:5173
-```
-
----
-
-## Estado atual do desenvolvimento
+## Status do projeto
 
 O Nuvia está em desenvolvimento.
 
-A etapa atual está concentrada na construção e no refinamento do front-end, incluindo a identidade visual, a organização das telas, a navegação e as interações da interface.
+Atualmente, o foco está na construção e no aprimoramento do front-end, incluindo a interface, a navegação e as interações entre as telas.
 
-Nesta fase, o aplicativo utiliza dados de demonstração e funcionalidades simuladas no próprio navegador.
+Nesta etapa, o projeto utiliza dados simulados para representar as funcionalidades do aplicativo.
 
-**O projeto ainda não possui:**
-
-- Back-end integrado.
+**Ainda não estão implementados:**
+- Backend.
 - Banco de dados.
-- Sistema de autenticação real.
-- Armazenamento de dados em servidor.
-- Integrações com dispositivos ou serviços externos.
+- Autenticação real de usuários.
+- Integrações com serviços externos.
+- Armazenamento definitivo de imagens.
 
-Esses recursos poderão ser considerados nas próximas etapas do desenvolvimento.
+## Próximos passos
 
-## Roadmap
-
-- [x] Definição da proposta e dos objetivos do aplicativo.
-- [x] Definição dos três pilares principais.
-- [x] Definição inicial da identidade visual.
-- [x] Planejamento das principais telas e funcionalidades.
-- [x] Desenvolvimento inicial do front-end.
-- [ ] Refinamento da experiência visual e de usabilidade.
-- [ ] Revisão e aprimoramento da responsividade.
-- [ ] Finalização das interações do front-end.
-- [ ] Planejamento da arquitetura do back-end.
-- [ ] Modelagem do banco de dados.
-- [ ] Implementação de autenticação.
-- [ ] Integração entre front-end e back-end.
-- [ ] Testes e validação da aplicação.
+- [ ] Finalizar o desenvolvimento do front-end.
+- [ ] Aprimorar a experiência de navegação.
+- [ ] Implementar o backend.
+- [ ] Desenvolver o banco de dados.
+- [ ] Implementar autenticação de usuários.
+- [ ] Integrar as funcionalidades ao banco de dados.
+- [ ] Realizar testes e melhorias de usabilidade.
 
 ## Princípios do projeto
 
-O desenvolvimento do Nuvia segue alguns princípios importantes:
+O desenvolvimento do Nuvia segue alguns princípios:
 
-**Simplicidade:** evitar funcionalidades desnecessárias e registros excessivos.
+- **Simplicidade:** evitar funcionalidades desnecessárias e excesso de informações.
+- **Autonomia:** permitir que o usuário escolha quais áreas deseja utilizar.
+- **Consistência:** facilitar a criação e manutenção de hábitos.
+- **Evolução:** tornar o progresso visível ao longo do tempo.
+- **Experiência do usuário:** priorizar uma interface intuitiva, agradável e funcional.
 
-**Autonomia:** permitir que o usuário escolha quais áreas deseja acompanhar.
+## Objetivo de desenvolvimento
 
-**Consistência:** valorizar a construção gradual de hábitos, sem abordagens punitivas.
-
-**Evolução:** apresentar informações que ajudem o usuário a compreender seu próprio progresso.
-
-**Experiência do usuário:** priorizar uma interface intuitiva, acessível e agradável.
-
-**Privacidade:** considerar a proteção e o controle dos dados pessoais desde o planejamento da arquitetura.
-
-## Objetivo de aprendizado e desenvolvimento
-
-Além de sua proposta como produto, o Nuvia também representa um projeto de desenvolvimento de software, envolvendo planejamento de funcionalidades, design de interfaces, organização de componentes, implementação de interações e, futuramente, integração com uma arquitetura completa de back-end.
-
-O projeto será desenvolvido de forma incremental, permitindo aprimoramentos e novas funcionalidades conforme sua evolução.
+Além de ser uma aplicação voltada à saúde e ao bem-estar, o Nuvia também é um projeto de aprendizado e desenvolvimento de habilidades em programação, especialmente na área de desenvolvimento web e engenharia de software.
 
 ---
 
-## Licença
-
-Este projeto ainda não possui uma licença de distribuição definida.
-
----
-
-<p align="center">
-  <strong>Nuvia</strong><br>
-  Saúde, movimento e bem-estar em um só lugar.
-</p>
+Desenvolvido como projeto pessoal de estudo.
