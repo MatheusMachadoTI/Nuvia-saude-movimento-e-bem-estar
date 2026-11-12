@@ -1,0 +1,30 @@
+.set {
+  width: 48px;
+  height: 48px;
+  border-radius: 14px;
+  border: 2px solid var(--ln);
+  background: transparent;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.set.on {
+  background: var(--tq);
+  border-color: var(--tq);
+  color: #1C1C1A;
+}
+
+.bar {
+  height: 10px;
+  border-radius: 9px;
+  background: rgba(255, 255, 255, .25);
+  overflow: hidden;
+}
+
+.bar i {
+  display: block;
+  height: 100%;
+  background: #fff;
+  border-radius: 9px;
+  transition: width .3s;
+}

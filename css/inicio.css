@@ -1,0 +1,25 @@
+.page-home .dots {
+  display: flex;
+  gap: 8px;
+  justify-content: space-between;
+  margin-top: 12px;
+}
+
+.page-home .dot {
+  flex: 1;
+  text-align: center;
+  font-size: 12px;
+  opacity: .9;
+}
+
+.page-home .dot b {
+  display: block;
+  height: 34px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, .22);
+  margin-bottom: 4px;
+}
+
+.page-home .dot.on b {
+  background: #fff;
+}

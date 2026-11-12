@@ -1,0 +1,19 @@
+.page-progress .ph {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  gap: 10px;
+}
+
+.page-progress .ph div {
+  border-radius: 16px;
+  overflow: hidden;
+  font-size: 12px;
+  color: var(--mu);
+}
+
+.page-progress .ph img {
+  width: 100%;
+  aspect-ratio: 3 / 4;
+  object-fit: cover;
+  display: block;
+}

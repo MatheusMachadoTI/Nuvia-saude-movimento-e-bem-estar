@@ -93,7 +93,18 @@ A interface utiliza uma combinação de cores contrastantes, com azul-marinho co
 - **Vite** — ambiente de desenvolvimento.
 - **JavaScript** — lógica e interatividade.
 - **CSS** — estilização e responsividade.
-- **Lucide React** — biblioteca de ícones.
+- **SVG** — ícones da interface.
+
+## Organização do front-end
+
+- `index.html` contém o elemento raiz onde o React é montado.
+- `src/main.jsx` inicia o React e carrega os estilos.
+- `src/App.jsx` controla o estado, a navegação e as ações compartilhadas.
+- `src/pages/` contém as telas: Início, Treinos, Evolução, Perfil, Alimentação e Sono.
+- `src/components/` reúne elementos reutilizados, como botões, ícones, gráficos e modal.
+- `src/data/` guarda os dados iniciais e o carregamento do armazenamento local.
+- `src/utils/` contém funções reutilizáveis de datas e horários.
+- `css/base.css` reúne variáveis de tema, layout e componentes compartilhados; os outros arquivos organizam estilos específicos.
 
 ## Execução do projeto
 
@@ -129,6 +140,12 @@ npm run dev
 ```
 
 Após iniciar, acesse o endereço disponibilizado pelo Vite no terminal.
+
+Para gerar a versão otimizada para publicação:
+
+```bash
+npm run build
+```
 
 ## Status do projeto
 
