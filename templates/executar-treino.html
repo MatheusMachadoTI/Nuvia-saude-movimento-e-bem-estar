@@ -1,17 +1,42 @@
 <div class="page page-workouts">
-  <div class="c pt workout-session-header">
-    <div class="row sp">
-      <h2 class="session-workout-title">{{workoutName}}</h2>
-      <span>{{completedSeries}}/{{totalSeries}}</span>
+  <header class="workout-session-heading">
+    <a class="workout-back-link" href="#treinos" data-a="sair" aria-label="Sair do treino">{{backIcon}}</a>
+    <div>
+      <p>{{category}}</p>
+      <h1>{{workoutName}}</h1>
     </div>
-    <div class="bar workout-session-progress">
+    <span id="workout-session-clock" class="workout-session-clock">{{elapsedLabel}}</span>
+  </header>
+
+  <section class="workout-session-overview" aria-label="Progresso do treino">
+    <div class="session-overview-values">
+      <div><strong>{{completedSeries}}/{{totalSeries}}</strong><span>séries</span></div>
+      <div><strong>{{remainingExercises}}</strong><span>restantes</span></div>
+    </div>
+    <div class="bar workout-session-progress" role="progressbar" aria-label="Séries concluídas"
+      aria-valuemin="0" aria-valuemax="{{totalSeries}}" aria-valuenow="{{completedSeries}}">
       <i style="width:{{progress}}%"></i>
     </div>
-  </div>
-  {{exerciseCards}}
-  <div class="row">
+    <p>{{completedExercises}} exercícios concluídos · Marque as séries ou finalize direto.</p>
+  </section>
+
+  <section class="workout-session-exercises" aria-labelledby="session-exercises-title">
+    <div class="workouts-section-heading">
+      <div>
+        <h2 id="session-exercises-title">Sua sequência</h2>
+        <p>Toque em cada série conforme concluir.</p>
+      </div>
+    </div>
+    {{exerciseCards}}
+  </section>
+
+  <div class="workout-session-actions">
     {{finishButton}}
     {{exitButton}}
   </div>
-  <p class="sub session-hint">Marcar séries é opcional: você pode finalizar direto.</p>
+  <p class="sub session-hint">Você pode finalizar a sessão sem marcar as séries.</p>
+  <div class="workout-session-tools" aria-label="Opções do plano">
+    {{editPlanButton}}
+    {{deletePlanButton}}
+  </div>
 </div>

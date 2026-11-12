@@ -16,132 +16,418 @@ import {
 
 const sleepLabels = ['', 'Ruim', 'Regular', 'Bom'];
 
-function renderHome({ data, days, today, weekSleep, lastSleep, exerciseDays }) {
+function localDateKey(date) {
+  return [
+    date.getFullYear(),
+    String(date.getMonth() + 1).padStart(2, '0'),
+    String(date.getDate()).padStart(2, '0'),
+  ].join('-');
+}
+
+function getWeekDates(dateKey) {
+  const date = new Date(`${dateKey}T12:00:00`);
+  date.setDate(date.getDate() - ((date.getDay() + 6) % 7));
+  return Array.from({ length: 7 }, (_, index) => {
+    const weekday = new Date(date);
+    weekday.setDate(date.getDate() + index);
+    return localDateKey(weekday);
+  });
+}
+
+function renderHome({ data, today, selectedHomeDay }) {
   const hour = new Date().getHours();
   const greeting = hour < 12 ? 'Bom dia' : hour < 18 ? 'Boa tarde' : 'Boa noite';
-  const todayMeals = data.refs.filter(meal => meal.d === today);
+  const week = getWeekDates(today);
+  const weekStart = week[0];
+  const weekEnd = week[week.length - 1];
+  const selectedDay = week.includes(selectedHomeDay) ? selectedHomeDay : today;
+  const selectedDateValue = new Date(`${selectedDay}T12:00:00`);
+  const weekWorkouts = data.hist.filter(workout => workout.d >= weekStart && workout.d <= weekEnd);
+  const activeWorkoutDays = new Set(weekWorkouts.map(workout => workout.d));
+  const weekSleep = data.sono.filter(sleep => sleep.d >= weekStart && sleep.d <= weekEnd);
+  const selectedWorkouts = data.hist.filter(workout => workout.d === selectedDay);
+  const selectedSleep = data.sono.find(sleep => sleep.d === selectedDay);
+  const selectedMeals = data.refs.filter(meal => meal.d === selectedDay);
   const nextWorkout = data.treinos[0];
-  const weekWorkoutCount = data.hist.filter(workout => workout.d >= days[0]).length;
+  const firstName = String(data.nome || '').trim().split(/\s+/)[0] || 'por aqui';
+  const mealTypes = [...new Set(selectedMeals.map(meal => meal.tipo))];
+  const dayLabels = week.map(day => {
+    const date = new Date(`${day}T12:00:00`);
+    const label = date.toLocaleDateString('pt-BR', { weekday: 'long' });
+    const shortLabel = date.toLocaleDateString('pt-BR', { weekday: 'short' }).replace('.', '').slice(0, 3);
+    const selected = day === selectedDay;
+    const hasWorkout = activeWorkoutDays.has(day);
+    return `
+      <button id="home-day-${day}" class="home-day-button${selected ? ' is-selected' : ''}${hasWorkout ? ' has-activity' : ''}"
+        type="button" data-a="selectDay" data-i="${day}" aria-pressed="${selected}"
+        aria-label="${e(label)}, ${date.getDate()} de ${e(date.toLocaleDateString('pt-BR', { month: 'long' }))}${hasWorkout ? ', treino registrado' : ''}">
+        <span class="home-day-name">${e(shortLabel)}</span>
+        <span class="home-day-number">${date.getDate()}</span>
+        <span class="home-day-marker" aria-hidden="true"></span>
+      </button>`;
+  }).join('');
+  const selectedWorkoutCount = selectedWorkouts.length;
+  const selectedMealSummary = selectedMeals.length
+    ? mealTypes.map(e).join(' · ')
+    : selectedDay === today
+      ? 'Registre sua primeira refeição'
+      : 'Nenhuma refeição registrada';
+  const recentActivities = data.hist.length
+    ? data.hist.slice(0, 3).map(item =>
+      `<div class="li"><span>${e(item.nome)}</span><span class="tag">${formatDate(item.d)}</span></div>`,
+    ).join('')
+    : empty('dumb', 'Seus treinos concluídos aparecem aqui.');
 
   return fillTemplate(templates.inicio, {
-    greeting,
-    firstName: e(data.nome.split(' ')[0]),
+    greeting: e(greeting),
+    firstName: e(firstName),
+    avatar: e(firstName[0].toUpperCase()),
     date: e(new Date().toLocaleDateString('pt-BR', {
       weekday: 'long',
       day: 'numeric',
       month: 'long',
     })),
-    weekSummary: `${exerciseDays.filter(Boolean).length} dias de treino · ${weekSleep.filter(sleep => sleep.q >= 2).length} noites de sono satisfatório`,
-    weekDays: days.map((day, index) =>
-      `<div class="dot ${exerciseDays[index] ? 'on' : ''}"><b></b>${formatWeekday(day)}</div>`,
+    weekSummary: `${activeWorkoutDays.size} ${activeWorkoutDays.size === 1 ? 'dia ativo' : 'dias ativos'} · ${weekSleep.filter(sleep => sleep.q >= 2).length} noites de sono satisfatório`,
+    weekRange: `${formatDate(weekStart)} — ${formatDate(weekEnd)}`,
+    weekDays: dayLabels,
+    selectedDate: e(selectedDateValue.toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })),
+    workoutIcon: icon('dumb', 18),
+    dayWorkoutCount: String(selectedWorkoutCount),
+    workoutDayTitle: selectedWorkoutCount
+      ? selectedWorkoutCount === 1 ? 'Treino concluído' : 'Treinos concluídos'
+      : selectedDay === today ? 'Pronto para começar' : 'Dia de recuperação',
+    workoutDayDescription: selectedWorkoutCount
+      ? e(selectedWorkouts.map(workout => workout.nome).join(' · '))
+      : selectedDay === today && nextWorkout
+        ? `Próximo: ${e(nextWorkout.nome)}`
+        : selectedDay === today
+          ? 'Você ainda não criou uma planilha.'
+          : 'Nenhuma atividade registrada.',
+    sleepIcon: icon('moon', 18),
+    sleepDuration: selectedSleep ? formatHours(duration(selectedSleep)) : '—',
+    sleepQuality: selectedSleep ? `Qualidade ${sleepLabels[selectedSleep.q]}` : 'Sem registro para este dia',
+    foodIcon: icon('food', 18),
+    mealCount: String(selectedMeals.length),
+    mealSummary: selectedMealSummary,
+    mealAction: selectedDay === today
+      ? button('refeicao', 'Registrar refeição', 'plus', 'home-meal-button')
+      : '<a class="home-tile-link" href="#alimentacao">Ver diário <span aria-hidden="true">→</span></a>',
+    progressIcon: icon('chart', 18),
+    workoutCount: String(weekWorkouts.length),
+    activeDayCount: String(activeWorkoutDays.size),
+    activeDayDots: week.map(day =>
+      `<span class="home-week-dot${activeWorkoutDays.has(day) ? ' is-active' : ''}" title="${e(formatDate(day))}${activeWorkoutDays.has(day) ? ': treino registrado' : ''}"></span>`,
     ).join(''),
-    workoutCount: weekWorkoutCount,
-    nextWorkout: `<span style="margin:10px 0 14px;font-weight:600;display:block">${nextWorkout ? `Próximo: ${e(nextWorkout.nome)}` : 'Crie sua primeira planilha'}</span>`,
-    startWorkoutButton: nextWorkout ? button('iniciar', 'Iniciar', 'play', 'w', nextWorkout.id) : '',
-    mealCount: todayMeals.length,
-    addMealButton: button('refeicao', 'Registrar', 'plus'),
-    sleepDuration: lastSleep ? formatHours(duration(lastSleep)) : '—',
-    lastSleep: lastSleep ? `Última noite · ${sleepLabels[lastSleep.q]}` : 'Nenhum registro ainda',
-    latestWeight: data.peso.length ? `${e(data.peso[data.peso.length - 1].v)} kg` : '—',
-    recentActivities: data.hist.length
-      ? data.hist.slice(0, 3).map(item =>
-        `<div class="li"><span>${e(item.nome)}</span><span class="tag">${formatDate(item.d)}</span></div>`,
-      ).join('')
-      : empty('dumb', 'Seus treinos concluídos aparecem aqui.'),
+    recentActivities,
   });
 }
 
-function renderWorkouts({ data }) {
-  const workoutCards = data.treinos.length
-    ? data.treinos.map((workout, index) => `
-      <div class="c ${index % 2 ? '' : 'pt'}">
-        <h2>${e(workout.nome)}</h2>
-        <p class="sub" style="margin-bottom:8px">${workout.ex.length} exercícios</p>
-        ${workout.ex.map(exercise => `
-          <div class="li" style="border-color:rgba(255,255,255,.2)">
-            <span>${e(exercise.n)}</span>
-            <span class="sub">${exercise.s}×${exercise.r}${exercise.c ? ` · ${e(exercise.c)} kg` : ''}</span>
-          </div>
-        `).join('')}
-        <div class="row" style="margin-top:14px">
-          ${workout.ex.length ? button('iniciar', 'Iniciar', 'play', 'w', workout.id) : ''}
-          ${button('editar', '', 'edit', 'ic s', workout.id, `Editar ${workout.nome}`)}
-          ${button('delT', '', 'trash', 'ic d', workout.id, `Excluir ${workout.nome}`)}
-        </div>
-      </div>
-    `).join('')
-    : `<div class="c" style="grid-column:1/-1">${empty('dumb', 'Nenhuma planilha ainda. Crie a primeira para começar.', button('novoTreino', 'Criar planilha', 'plus'))}</div>`;
+export const workoutCategories = [
+  'Sem categoria',
+  'Peito e tríceps',
+  'Costas e bíceps',
+  'Pernas',
+  'Ombros',
+  'Cardio',
+  'Corpo inteiro',
+];
 
-  const history = data.hist.length
-    ? data.hist.map(item => `
-      <div class="li">
-        <div><b>${e(item.nome)}</b><div class="sub">${item.n} exercícios</div></div>
-        <span class="tag">${formatDate(item.d)}</span>
-      </div>
-    `).join('')
-    : empty('cal', 'Nenhum treino realizado ainda.');
+export function getWorkoutCategory(workout) {
+  if (workout.categoria) return workout.categoria;
+  const inferred = String(workout.nome || '').match(/[—–-]\s*(.+)$/);
+  return inferred ? inferred[1] : 'Sem categoria';
+}
+
+function categoryKey(category) {
+  return String(category)
+    .trim()
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .toLocaleLowerCase('pt-BR');
+}
+
+function totalWorkoutSets(workout) {
+  return workout.ex.reduce((total, exercise) => total + (Number(exercise.s) || 0), 0);
+}
+
+function formatWorkoutDuration(value) {
+  if (!Number.isFinite(Number(value)) || value === null || value === undefined) return '';
+  const minutes = Math.max(0, Math.round(Number(value)));
+  if (!minutes) return 'Menos de 1 min';
+  return minutes < 60
+    ? `${minutes} min`
+    : `${Math.floor(minutes / 60)}h ${String(minutes % 60).padStart(2, '0')}min`;
+}
+
+function renderWorkouts({ data, historyExpanded, workoutCategoryFilter = 'Todos' }) {
+  const categoryLabels = new Map(workoutCategories.map(category => [categoryKey(category), category]));
+  const categoriesByKey = new Map();
+  data.treinos.forEach(workout => {
+    const category = getWorkoutCategory(workout).trim().replace(/\s+/g, ' ');
+    const key = categoryKey(category);
+    if (!categoriesByKey.has(key)) {
+      categoriesByKey.set(key, categoryLabels.get(key) || category);
+    }
+  });
+  const categories = [...categoriesByKey.values()];
+  const requestedCategoryKey = categoryKey(workoutCategoryFilter);
+  const selectedCategory = categories.find(category => categoryKey(category) === requestedCategoryKey) || 'Todos';
+  const selectedCategoryKey = selectedCategory === 'Todos' ? '' : categoryKey(selectedCategory);
+  const filteredWorkouts = selectedCategory === 'Todos'
+    ? data.treinos
+    : data.treinos.filter(workout => categoryKey(getWorkoutCategory(workout)) === selectedCategoryKey);
+  const workoutFilter = ['Todos', ...categories].map(category => `
+    <button class="workout-filter${category === selectedCategory ? ' is-selected' : ''}"
+      type="button" data-a="filtrarTreinos" data-i="${e(category)}"
+      aria-pressed="${category === selectedCategory}">${e(category)}</button>
+  `).join('');
+  const workoutCards = filteredWorkouts.length
+    ? filteredWorkouts.map((workout, index) => {
+      const lastWorkout = [...data.hist]
+        .sort((first, second) => second.d.localeCompare(first.d))
+        .find(item => item.workoutId === workout.id || (!item.workoutId && item.nome === workout.nome));
+      const exerciseCount = workout.ex.length;
+      const sets = totalWorkoutSets(workout);
+      const lastDuration = lastWorkout ? formatWorkoutDuration(lastWorkout.durationMinutes) : '';
+      const lastLabel = lastWorkout
+        ? `Último treino · ${formatDate(lastWorkout.d)}${lastDuration ? ` · ${lastDuration}` : ''}`
+        : 'Ainda não realizado';
+      const action = exerciseCount ? 'iniciar' : 'editar';
+      const actionLabel = exerciseCount
+        ? `Acompanhar ${workout.nome}`
+        : `Adicionar exercícios a ${workout.nome}`;
+      return `
+        <article class="workout-card workout-card-tone-${index % 3}" role="button" tabindex="0"
+          data-a="${action}" data-i="${e(workout.id)}" aria-label="${e(actionLabel)}">
+          <div class="workout-card-top">
+            <span class="workout-card-icon">${icon('dumb', 22)}</span>
+            <span class="workout-category">${e(getWorkoutCategory(workout))}</span>
+            <span class="workout-card-open" aria-hidden="true">${icon(exerciseCount ? 'play' : 'edit', 16)}</span>
+          </div>
+          <h3>${e(workout.nome)}</h3>
+          <div class="workout-card-stats">
+            <span><strong>${exerciseCount}</strong> ${exerciseCount === 1 ? 'exercício' : 'exercícios'}</span>
+            <span><strong>${sets}</strong> ${sets === 1 ? 'série' : 'séries'}</span>
+          </div>
+          <p class="workout-card-last">${e(lastLabel)}</p>
+        </article>`;
+    }).join('')
+    : data.treinos.length
+      ? `<div class="workout-empty workout-empty-filter">${empty('cal', 'Nenhum treino nesta categoria.')}</div>`
+      : `
+        <div class="workout-empty">
+          <span class="workout-empty-icon">${icon('dumb', 34)}</span>
+          <h3>Seu próximo treino começa aqui</h3>
+          <p>Crie uma planilha do seu jeito e organize os exercícios no seu ritmo.</p>
+          ${button('novoTreino', 'Criar primeiro treino', 'plus', 'workout-create-button')}
+        </div>`;
+  const featuredWorkout = data.treinos[0];
+  const featuredHistory = featuredWorkout
+    ? [...data.hist]
+      .sort((first, second) => second.d.localeCompare(first.d))
+      .find(item => item.workoutId === featuredWorkout.id || (!item.workoutId && item.nome === featuredWorkout.nome))
+    : null;
+  const featuredDuration = featuredHistory
+    ? formatWorkoutDuration(featuredHistory.durationMinutes)
+    : '';
+  const featuredCard = featuredWorkout
+    ? `
+      <section class="workout-feature" aria-labelledby="workout-feature-title">
+        <div class="workout-feature-copy">
+          <span class="workout-feature-status">${featuredWorkout.ex.length ? 'PRONTO PARA COMEÇAR' : 'ADICIONE EXERCÍCIOS'}</span>
+          <h2 id="workout-feature-title">${e(featuredWorkout.nome)}</h2>
+          <p>${e(getWorkoutCategory(featuredWorkout))}</p>
+          <div class="workout-feature-stats">
+            <span>${featuredWorkout.ex.length} ${featuredWorkout.ex.length === 1 ? 'exercício' : 'exercícios'}</span>
+            <span>${totalWorkoutSets(featuredWorkout)} ${totalWorkoutSets(featuredWorkout) === 1 ? 'série' : 'séries'}</span>
+            ${featuredDuration ? `<span>Último · ${e(featuredDuration)}</span>` : ''}
+          </div>
+          ${featuredWorkout.ex.length
+            ? button('iniciar', 'Iniciar treino', 'play', 'workout-feature-action', featuredWorkout.id)
+            : button('editar', 'Adicionar exercícios', 'edit', 'workout-feature-action', featuredWorkout.id)}
+        </div>
+        <div class="workout-feature-art" aria-hidden="true">${icon('dumb', 72)}</div>
+      </section>`
+    : `
+      <section class="workout-feature workout-feature-empty" aria-labelledby="workout-feature-title">
+        <div class="workout-feature-copy">
+          <span class="workout-feature-status">MOVIMENTO NO SEU RITMO</span>
+          <h2 id="workout-feature-title">Tudo começa com um plano.</h2>
+          <p>Monte sua primeira sequência de exercícios.</p>
+          ${button('novoTreino', 'Criar treino', 'plus', 'workout-feature-action')}
+        </div>
+        <div class="workout-feature-art" aria-hidden="true">${icon('dumb', 72)}</div>
+      </section>`;
+  const historyItems = [...data.hist].sort((first, second) => second.d.localeCompare(first.d));
+  const visibleHistory = historyExpanded ? historyItems : historyItems.slice(0, 3);
+  const history = visibleHistory.length
+    ? visibleHistory.map(item => {
+      const durationLabel = formatWorkoutDuration(item.durationMinutes);
+      const details = [
+        `${Number(item.n) || 0} ${(Number(item.n) || 0) === 1 ? 'exercício' : 'exercícios'}`,
+        item.seriesCompleted
+          ? `${item.seriesCompleted} ${item.seriesCompleted === 1 ? 'série marcada' : 'séries marcadas'}`
+          : '',
+        durationLabel,
+      ].filter(Boolean);
+      return `
+        <article class="workout-history-item">
+          <span class="workout-history-icon">${icon('check', 18)}</span>
+          <div class="workout-history-copy">
+            <h3>${e(item.nome)}</h3>
+            <p>${details.map(e).join(' · ')}</p>
+            ${item.observacoes ? `<p class="workout-history-note">${e(item.observacoes)}</p>` : ''}
+          </div>
+          <div class="workout-history-meta">
+            <span class="workout-history-status">Concluído</span>
+            <time datetime="${e(item.d)}">${formatDate(item.d)}</time>
+          </div>
+        </article>`;
+    }).join('')
+    : empty('cal', 'Seus treinos concluídos aparecerão aqui.');
+  const historyToggle = historyItems.length > 3
+    ? `<button class="workout-history-toggle" type="button" data-a="historial" aria-expanded="${Boolean(historyExpanded)}">${historyExpanded ? 'Mostrar menos' : 'Ver histórico completo'} ${icon('chart', 16)}</button>`
+    : '';
 
   return fillTemplate(templates.treinos, {
-    newWorkoutButton: button('novoTreino', 'Nova planilha', 'plus'),
+    avatar: e(String(data.nome || '').trim()[0] || ''),
+    newWorkoutButton: button('novoTreino', 'Criar treino', 'plus', 'workout-create-button'),
+    featuredCard,
+    workoutCount: String(data.treinos.length),
+    workoutFilter: data.treinos.length ? workoutFilter : '',
     workoutCards,
     history,
+    historyToggle,
   });
 }
 
 function renderWorkoutEditor({ workout }) {
   if (!workout) return '';
+  const category = getWorkoutCategory(workout);
+  const categories = [...new Set([...workoutCategories, category])];
+  const categoryOptions = categories.map(option =>
+    `<option value="${e(option)}"${option === category ? ' selected' : ''}>${e(option)}</option>`,
+  ).join('');
+  const workoutFields = `
+    <div class="workout-editor-fields">
+      <label>Nome do treino
+        <input data-wf="nome" value="${e(workout.nome)}" maxlength="80" aria-label="Nome do treino">
+      </label>
+      <label>Grupo muscular ou categoria
+        <select data-wf="categoria" aria-label="Grupo muscular ou categoria">${categoryOptions}</select>
+      </label>
+      <label>Observações do treino <span>(opcional)</span>
+        <textarea data-wf="observacoes" rows="3" maxlength="500" aria-label="Observações do treino">${e(workout.observacoes || '')}</textarea>
+      </label>
+    </div>`;
   const exerciseFields = workout.ex.length
     ? workout.ex.map((exercise, index) => `
-      <div class="li exercise-editor" style="display:block">
-        <input data-k="${index}" data-f="n" value="${e(exercise.n)}" aria-label="Exercício">
-        <div class="row" style="margin-top:8px">
-          <label style="flex:1;margin:0">Séries<input type="number" data-k="${index}" data-f="s" value="${exercise.s}" min="1"></label>
-          <label style="flex:1;margin:0">Reps<input type="number" data-k="${index}" data-f="r" value="${exercise.r}" min="1"></label>
-          <label style="flex:1;margin:0">Carga kg<input type="number" data-k="${index}" data-f="c" value="${exercise.c}" min="0"></label>
+      <article class="exercise-editor-card">
+        <div class="exercise-editor-heading">
+          <span class="exercise-editor-number">${String(index + 1).padStart(2, '0')}</span>
+          <span>Exercício</span>
+          <div class="exercise-editor-order">
+            <button class="btn s ic" type="button" data-a="mov" data-i="${index}" data-dir="up"
+              aria-label="Mover exercício ${e(exercise.n)} para cima"${index === 0 ? ' disabled' : ''}>${icon('up', 16)}</button>
+            <button class="btn s ic" type="button" data-a="mov" data-i="${index}" data-dir="down"
+              aria-label="Mover exercício ${e(exercise.n)} para baixo"${index === workout.ex.length - 1 ? ' disabled' : ''}>${icon('down', 16)}</button>
+          </div>
         </div>
-        <div class="row" style="margin-top:8px">
-          ${button('mov', 'Subir', '', 's', index)}
-          ${button('delEx', 'Remover', 'trash', 'd', index)}
+        <label>Nome do exercício
+          <input data-k="${index}" data-f="n" value="${e(exercise.n)}" maxlength="80" aria-label="Nome do exercício">
+        </label>
+        <div class="exercise-editor-numbers">
+          <label>Séries<input type="number" data-k="${index}" data-f="s" value="${exercise.s}" min="1" inputmode="numeric" aria-label="Séries"></label>
+          <label>Repetições<input type="number" data-k="${index}" data-f="r" value="${exercise.r}" min="1" inputmode="numeric" aria-label="Repetições"></label>
+          <label>Carga <span>(opcional)</span><input type="number" data-k="${index}" data-f="c" value="${exercise.c || ''}" min="0" step="any" inputmode="decimal" aria-label="Carga em quilos"></label>
         </div>
-      </div>
+        <label>Observações <span>(opcional)</span>
+          <textarea data-k="${index}" data-f="observacoes" rows="2" maxlength="300" aria-label="Observações do exercício">${e(exercise.observacoes || '')}</textarea>
+        </label>
+        <button class="exercise-remove-button" type="button" data-a="delEx" data-i="${index}">${icon('trash', 16)} Remover exercício</button>
+      </article>
     `).join('')
-    : empty('dumb', 'Adicione o primeiro exercício.');
+    : `<div class="workout-empty exercise-empty">${empty('dumb', 'Adicione o primeiro exercício para montar sua sequência.')}</div>`;
 
   return fillTemplate(templates.editar, {
     backIcon: icon('back'),
+    savedIcon: icon('check', 15),
     workoutName: e(workout.nome),
+    workoutFields,
+    exerciseCount: String(workout.ex.length),
     exerciseFields,
-    addExerciseButton: button('addEx', 'Adicionar exercício', 'plus'),
+    addExerciseButton: button('addEx', 'Adicionar exercício', 'plus', 'workout-create-button'),
   });
 }
 
 function renderWorkoutSession({ workout, session }) {
   if (!workout || !session) return '';
-  const totalSeries = workout.ex.reduce((total, exercise) => total + exercise.s, 0);
+  const totalSeries = totalWorkoutSets(workout);
   const completedSeries = Object.values(session.done).filter(Boolean).length;
-  const exerciseCards = workout.ex.map((exercise, exerciseIndex) => `
-    <div class="c exercise-session-card" style="margin-bottom:12px">
-      <div class="row sp">
-        <h2 style="margin:0">${e(exercise.n)}</h2>
-        <span class="tag">${exercise.r} reps${exercise.c ? ` · ${e(exercise.c)} kg` : ''}</span>
-      </div>
-      <div class="row" style="margin-top:12px">
-        ${Array.from({ length: exercise.s }, (_, seriesIndex) => {
-          const key = `${exerciseIndex}-${seriesIndex}`;
-          return `<button class="set ${session.done[key] ? 'on' : ''}" data-a="tgl" data-i="${key}" aria-pressed="${Boolean(session.done[key])}">${seriesIndex + 1}</button>`;
-        }).join('')}
-      </div>
-    </div>
-  `).join('');
+  const skippedExercises = new Set(session.skipped || []);
+  const completedExercises = workout.ex.filter((exercise, exerciseIndex) =>
+    !skippedExercises.has(exerciseIndex)
+      && Number(exercise.s) > 0
+      && Array.from({ length: Number(exercise.s) || 0 }, (_, seriesIndex) =>
+        session.done[`${exerciseIndex}-${seriesIndex}`],
+      ).every(Boolean),
+  ).length;
+  const remainingExercises = workout.ex.filter((exercise, exerciseIndex) =>
+    !skippedExercises.has(exerciseIndex)
+      && !Array.from({ length: Number(exercise.s) || 0 }, (_, seriesIndex) =>
+        session.done[`${exerciseIndex}-${seriesIndex}`],
+      ).every(Boolean),
+  ).length;
+  const elapsedMinutes = Math.floor(Math.max(0, Date.now() - (session.startedAt || Date.now())) / 60000);
+  const elapsedLabel = formatWorkoutDuration(elapsedMinutes) || 'Menos de 1 min';
+  const exerciseCards = workout.ex.map((exercise, exerciseIndex) => {
+    const skipped = skippedExercises.has(exerciseIndex);
+    const sets = Array.from({ length: Number(exercise.s) || 0 }, (_, seriesIndex) => {
+      const key = `${exerciseIndex}-${seriesIndex}`;
+      return `<button class="set ${session.done[key] ? 'on' : ''}" type="button" data-a="tgl" data-i="${key}"
+        aria-pressed="${Boolean(session.done[key])}" aria-label="Série ${seriesIndex + 1} de ${e(exercise.n)}">${seriesIndex + 1}</button>`;
+    }).join('');
+    return `
+      <article class="exercise-session-card${skipped ? ' is-skipped' : ''}">
+        <div class="exercise-session-heading">
+          <div>
+            <span class="exercise-session-index">EXERCÍCIO ${String(exerciseIndex + 1).padStart(2, '0')}</span>
+            <h2>${e(exercise.n)}</h2>
+          </div>
+          ${skipped
+            ? '<span class="exercise-skipped-tag">Pulado</span>'
+            : `<span class="exercise-session-prescription">${exercise.r} reps${exercise.c ? ` · ${e(exercise.c)} kg` : ''}</span>`}
+        </div>
+        ${exercise.observacoes ? `<p class="exercise-session-note">${e(exercise.observacoes)}</p>` : ''}
+        ${skipped
+          ? button('retomarEx', 'Retomar exercício', 'plus', 'session-skip-button', exerciseIndex)
+          : `
+            <div class="session-sets" aria-label="Marque cada série concluída">${sets || '<span class="sub">Sem séries definidas</span>'}</div>
+            <button class="session-skip-button" type="button" data-a="pularEx" data-i="${exerciseIndex}">Pular exercício</button>`}
+      </article>`;
+  }).join('');
+  const progress = totalSeries ? Math.min(100, (completedSeries / totalSeries) * 100) : 0;
 
   return fillTemplate(templates.exec, {
     workoutName: e(workout.nome),
+    category: e(getWorkoutCategory(workout)),
+    backIcon: icon('back'),
     completedSeries,
     totalSeries,
-    progress: totalSeries ? (completedSeries / totalSeries) * 100 : 0,
-    exerciseCards,
-    finishButton: `<button class="btn finish-workout-button" data-a="fim">${icon('check')}Finalizar treino</button>`,
-    exitButton: button('sair', 'Sair', 'x', 's'),
+    completedExercises,
+    remainingExercises,
+    elapsedLabel,
+    progress,
+    exerciseCards: exerciseCards || `<div class="workout-empty">${empty('dumb', 'Este treino ainda não tem exercícios.')}</div>`,
+    editPlanButton: button('editar', 'Editar plano', 'edit', 's', workout.id),
+    deletePlanButton: button('delT', 'Excluir treino', 'trash', 'd', workout.id),
+    finishButton: `<button class="btn finish-workout-button" type="button" data-a="fim">${icon('check')}Finalizar treino</button>`,
+    exitButton: button('sair', 'Sair do treino', 'x', 's'),
   });
 }
 
@@ -152,7 +438,7 @@ function renderProgress({ data, days, weekSleep, exerciseDays, photos }) {
     ? bars(days.map(day => {
       const sleep = weekSleep.find(item => item.d === day);
       return sleep ? +(duration(sleep) / 60).toFixed(1) : 0;
-    }), days.map(formatWeekday), '#7F94D1', 10)
+    }), days.map(formatWeekday), 'var(--lv)', 10)
     : empty('moon', 'Sem registros de sono nesta semana.');
   const photoGallery = photos.length
     ? `<div class="ph">${photos.map(photo =>
@@ -167,7 +453,7 @@ function renderProgress({ data, days, weekSleep, exerciseDays, photos }) {
     averageSleep: weekSleep.length ? `média de ${formatHours(averageSleep)}` : 'sem registros',
     weeklyMeals: data.refs.filter(meal => meal.d >= days[0]).length,
     latestWeight: latestWeight ? `${e(latestWeight.v)} kg` : '—',
-    trainingChart: bars(exerciseDays.map(Number), days.map(formatWeekday), '#16336F', 1),
+    trainingChart: bars(exerciseDays.map(Number), days.map(formatWeekday), 'var(--green)', 1),
     sleepChart,
     registerWeightButton: button('pesar', 'Registrar', 'plus', 's'),
     weightChart: data.peso.length > 1
@@ -222,7 +508,7 @@ function renderSleep({ data, days }) {
     ? bars(days.map(day => {
       const record = records.find(item => item.d === day);
       return record ? +(duration(record) / 60).toFixed(1) : 0;
-    }), days.map(formatWeekday), '#7F94D1', 10)
+    }), days.map(formatWeekday), 'var(--lv)', 10)
     : empty('moon', 'Registre sua primeira noite.');
   const sleepRecords = records.map(record => `
     <div class="li">
@@ -246,7 +532,7 @@ function renderProfile({ data, dark }) {
     `<div class="li"><span>${label}</span><button class="sw ${enabled ? 'on' : ''}" data-a="${key === 'tema' ? 'tema' : 'sw'}" data-i="${key}" role="switch" aria-checked="${Boolean(enabled)}" aria-label="${label}"></button></div>`;
   const goals = data.obj.length
     ? data.obj.map(goal => `
-      <div class="li" style="border-color:rgba(42,35,80,.15)">
+      <div class="li" style="border-color:var(--ln)">
         <span>${icon('target', 16)} ${e(goal.t)}</span>
         <span class="row">
           ${button('obj', '', 'edit', 'ic w', goal.id, 'Editar')}

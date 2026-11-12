@@ -14,6 +14,8 @@ export const icons = {
   target: '<circle cx="12" cy="12" r="9"/><circle cx="12" cy="12" r="4"/>',
   cam: '<path d="M4 7h3l2-3h6l2 3h3v13H4z"/><circle cx="12" cy="13" r="4"/>',
   back: '<path d="m15 18-6-6 6-6"/>',
+  up: '<path d="m18 15-6-6-6 6"/>',
+  down: '<path d="m6 9 6 6 6-6"/>',
   cal: '<rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/>',
 };
 
@@ -86,7 +88,7 @@ export function weightLine(points) {
     10 + index * (width - 20) / (points.length - 1),
     90 - (point.v - min) / (max - min) * 70,
   ]);
-  return `<svg viewBox="0 0 ${width} 110" width="100%" role="img" aria-label="Gráfico de peso"><polyline points="${coordinates.map(point => point.join(',')).join(' ')}" fill="none" stroke="#FE492A" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${coordinates.map((point, index) => `<circle cx="${point[0]}" cy="${point[1]}" r="5" fill="#16336F"/><text x="${point[0]}" y="106" text-anchor="middle" font-size="10" fill="currentColor" opacity=".7">${formatDate(points[index].d)}</text>`).join('')}</svg>`;
+  return `<svg viewBox="0 0 ${width} 110" width="100%" role="img" aria-label="Gráfico de peso"><polyline points="${coordinates.map(point => point.join(',')).join(' ')}" fill="none" stroke="var(--tq)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/>${coordinates.map((point, index) => `<circle cx="${point[0]}" cy="${point[1]}" r="5" fill="var(--pt)"/><text x="${point[0]}" y="106" text-anchor="middle" font-size="10" fill="currentColor" opacity=".7">${formatDate(points[index].d)}</text>`).join('')}</svg>`;
 }
 
 export const newId = () => Math.random().toString(36).slice(2, 8);

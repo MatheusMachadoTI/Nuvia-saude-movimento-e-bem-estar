@@ -1,47 +1,61 @@
 :root {
-  --pt: #16336F;
-  --mt: #B1BFE2;
-  --vl: #E4E9F5;
-  --bg: #F0EEDF;
-  --az: #1C1C1A;
-  --tq: #FE492A;
-  --lv: #7F94D1;
-  --card: #FCFBF6;
-  --tx: #1C1C1A;
-  --mu: #5d6070;
-  --ln: #dcdde3;
-  --sh: 0 8px 24px rgba(22, 51, 111, .10);
-  --g1: #d3dbf0;
-  --g2: #e6e9f0;
-  --g3: #F0EEDF;
+  color-scheme: light;
+  --pt: #151515;
+  --mt: #D3B8F5;
+  --vl: #EDE3F8;
+  --bg: #F5F5F5;
+  --az: #151515;
+  --tq: #FFC14F;
+  --lv: #D3B8F5;
+  --sky: #B9D9F3;
+  --green: #8FD59D;
+  --card: #FFFFFF;
+  --tx: #151515;
+  --mu: #6C6C6C;
+  --ln: #E7E7E7;
+  --sh: 0 8px 24px rgba(0, 0, 0, .06);
+  --g1: #F1F1F1;
+  --g2: #F7F7F7;
+  --g3: #F7F7F7;
+  --focus: #151515;
+  --danger-bg: #ECECEC;
+  --success-text: #347244;
   box-sizing: border-box;
   padding-top: env(safe-area-inset-top, 0px);
   padding-bottom: env(safe-area-inset-bottom, 0px);
 }
 
 :root[data-t=dark] {
-  --card: #262624;
-  --tx: #F0EEDF;
-  --mu: #a9aab4;
-  --ln: #3a3a40;
+  color-scheme: dark;
+  --bg: #141414;
+  --card: #292929;
+  --tx: #F5F5F5;
+  --mu: #B8B8B8;
+  --ln: #414141;
   --sh: 0 8px 24px rgba(0, 0, 0, .35);
-  --g1: #141413;
-  --g2: #171c2b;
-  --g3: #16264d;
-  --vl: #2a3350;
+  --g1: #141414;
+  --g2: #181818;
+  --g3: #1D1D1D;
+  --focus: #FFFFFF;
+  --danger-bg: #414141;
+  --success-text: #9DE5A7;
 }
 
 @media (prefers-color-scheme: dark) {
   :root:not([data-t=light]):not([data-t=dark]) {
-    --card: #262624;
-    --tx: #F0EEDF;
-    --mu: #a9aab4;
-    --ln: #3a3a40;
+    color-scheme: dark;
+    --bg: #141414;
+    --card: #292929;
+    --tx: #F5F5F5;
+    --mu: #B8B8B8;
+    --ln: #414141;
     --sh: 0 8px 24px rgba(0, 0, 0, .35);
-    --g1: #141413;
-    --g2: #171c2b;
-    --g3: #16264d;
-    --vl: #2a3350;
+    --g1: #141414;
+    --g2: #181818;
+    --g3: #1D1D1D;
+    --focus: #FFFFFF;
+    --danger-bg: #414141;
+    --success-text: #9DE5A7;
   }
 }
 
@@ -57,14 +71,15 @@ html {
 body {
   font-family: Inter, system-ui, sans-serif;
   color: var(--tx);
-  background: linear-gradient(160deg, var(--g1), var(--g2) 45%, var(--g3)) fixed;
+  background: var(--bg);
   min-height: 100vh;
   line-height: 1.45;
 }
 
 button,
 input,
-select {
+select,
+textarea {
   font: inherit;
   color: inherit;
 }
@@ -133,20 +148,56 @@ main {
 
 @media (max-width: 799px) {
   nav {
-    left: 12px;
-    right: 12px;
-    bottom: calc(10px + env(safe-area-inset-bottom, 0px));
-    border-radius: 22px;
-    display: flex;
-    justify-content: space-around;
-    padding: 6px;
+    left: max(16px, calc((100vw - 390px) / 2));
+    right: max(16px, calc((100vw - 390px) / 2));
+    bottom: calc(12px + env(safe-area-inset-bottom, 0px));
+    border-radius: 999px;
+    display: grid;
+    align-items: center;
+    justify-items: center;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 4px;
+    height: 68px;
+    padding: 8px 10px;
+    background: var(--pt);
+    box-shadow: 0 12px 30px rgba(0, 0, 0, .18);
   }
 
   nav a {
-    flex-direction: column;
-    gap: 2px;
-    font-size: 11px;
-    padding: 8px 12px;
+    position: relative;
+    display: grid;
+    width: 50px;
+    height: 50px;
+    min-width: 50px;
+    min-height: 50px;
+    align-self: center;
+    justify-self: center;
+    place-items: center;
+    gap: 0;
+    padding: 0;
+    border-radius: 50%;
+    color: rgba(255, 255, 255, .76);
+    line-height: 0;
+  }
+
+  nav a svg {
+    display: block;
+    width: 22px;
+    height: 22px;
+  }
+
+  nav a .nav-label {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+  }
+
+  nav a.on {
+    background: var(--mt);
+    color: var(--pt);
   }
 
   nav .lg {
@@ -213,23 +264,23 @@ h2 {
 }
 
 .c.pt {
-  background: linear-gradient(135deg, #16336F, #234a94);
+  background: var(--pt);
   color: #fff;
 }
 
 .c.tq {
-  background: linear-gradient(135deg, #FE492A, #ff6a4d);
-  color: #1C1C1A;
+  background: var(--tq);
+  color: var(--az);
 }
 
 .c.lv {
-  background: linear-gradient(135deg, #B1BFE2, #c9d3ee);
-  color: #16336F;
+  background: var(--lv);
+  color: var(--az);
 }
 
 .c.mt {
-  background: #e8e5d2;
-  color: #1C1C1A;
+  background: var(--mt);
+  color: var(--az);
 }
 
 .c.pt .sub,
@@ -270,17 +321,13 @@ h2 {
 nav a:focus-visible,
 input:focus-visible,
 select:focus-visible {
-  outline: 3px solid var(--tq);
+  outline: 3px solid var(--focus);
   outline-offset: 2px;
 }
 
 .btn.s {
   background: var(--vl);
-  color: var(--pt);
-}
-
-[data-t=dark] .btn.s {
-  color: var(--mt);
+  color: var(--az);
 }
 
 .btn.w {
@@ -294,8 +341,8 @@ select:focus-visible {
 }
 
 .btn.d {
-  background: #f3dede;
-  color: #8a3a3a;
+  background: var(--danger-bg);
+  color: var(--tx);
 }
 
 .row {
@@ -331,10 +378,6 @@ select:focus-visible {
   font-weight: 600;
 }
 
-[data-t=dark] .tag {
-  color: var(--mt);
-}
-
 .empty {
   text-align: center;
   padding: 26px 10px;
@@ -347,13 +390,18 @@ select:focus-visible {
 }
 
 input,
-select {
+select,
+textarea {
   width: 100%;
   padding: 12px 14px;
   border-radius: 14px;
   border: 1.5px solid var(--ln);
   background: var(--card);
   min-height: 44px;
+}
+
+textarea {
+  resize: vertical;
 }
 
 label {

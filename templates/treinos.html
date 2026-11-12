@@ -1,14 +1,37 @@
 <div class="page page-workouts">
-  <div class="top">
-    <div>
-      <h1>Treinos</h1>
-      <p class="sub">Suas planilhas e histórico</p>
+  <header class="workouts-header">
+    <div class="workouts-header-top">
+      <a class="workouts-avatar" href="#perfil" aria-label="Abrir perfil de {{avatar}}">{{avatar}}</a>
+      {{newWorkoutButton}}
     </div>
-    {{newWorkoutButton}}
-  </div>
-  <div class="grid">{{workoutCards}}</div>
-  <div class="c">
-    <h2>Histórico</h2>
-    {{history}}
-  </div>
+    <div class="workouts-heading">
+      <h1>Treinos</h1>
+    </div>
+  </header>
+
+  {{featuredCard}}
+
+  <section class="workouts-section" aria-labelledby="my-workouts-title">
+    <div class="workouts-section-heading">
+      <div>
+        <h2 id="my-workouts-title">Meus treinos <span>{{workoutCount}}</span></h2>
+        <p>Planos para acompanhar no seu ritmo.</p>
+      </div>
+    </div>
+    <div class="workout-filters" aria-label="Filtrar treinos por categoria">
+      {{workoutFilter}}
+    </div>
+    <div class="workout-list">{{workoutCards}}</div>
+  </section>
+
+  <section class="workout-history-section" id="historico" aria-labelledby="workout-history-title">
+    <div class="workouts-section-heading">
+      <div>
+        <h2 id="workout-history-title">Histórico recente</h2>
+        <p>Treinos que você já concluiu.</p>
+      </div>
+      {{historyToggle}}
+    </div>
+    <div class="workout-history-list">{{history}}</div>
+  </section>
 </div>

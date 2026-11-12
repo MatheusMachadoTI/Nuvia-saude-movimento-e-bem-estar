@@ -1,51 +1,95 @@
 <div class="page page-home">
-  <div class="top">
-    <div>
-      <h1>{{greeting}}, {{firstName}}</h1>
-      <p class="sub">{{date}}</p>
+  <header class="home-header">
+    <a class="home-avatar" href="#perfil" aria-label="Abrir perfil de {{firstName}}">{{avatar}}</a>
+    <div class="home-greeting">
+      <p>{{greeting}}</p>
+      <h1>{{firstName}}</h1>
+      <p class="home-date">{{date}}</p>
     </div>
-  </div>
-  <div class="grid">
-    <div class="c pt" style="grid-column:1/-1">
-      <h2>Sua semana</h2>
-      <p class="sub">{{weekSummary}}</p>
-      <div class="dots">{{weekDays}}</div>
+  </header>
+
+  <section class="home-week-section" aria-labelledby="home-week-title">
+    <div class="home-section-heading">
+      <div>
+        <h2 id="home-week-title">Sua semana</h2>
+        <p>{{weekSummary}}</p>
+      </div>
+      <span class="home-week-range">{{weekRange}}</span>
     </div>
-    <div class="c tq">
-      <h2>Treinos</h2>
-      <div class="big">{{workoutCount}}</div>
-      <p class="sub">treinos nesta semana</p>
-      <p class="next-workout">{{nextWorkout}}</p>
-      {{startWorkoutButton}}
+    <div class="home-calendar" aria-label="Selecione um dia da semana">
+      {{weekDays}}
     </div>
-    <div class="c mt">
-      <h2>Alimentação</h2>
-      <div class="big">{{mealCount}}</div>
-      <p class="sub">refeições registradas hoje</p>
-      <div class="row home-meal-actions">
-        {{addMealButton}}
-        <a class="btn s" href="#alimentacao" style="text-decoration:none">Ver dia</a>
+  </section>
+
+  <section class="home-day-section" aria-labelledby="home-day-title">
+    <div class="home-section-heading home-day-heading">
+      <div>
+        <h2 id="home-day-title">Seu dia</h2>
+        <p>{{selectedDate}}</p>
       </div>
     </div>
-    <div class="c lv">
-      <h2>Sono</h2>
-      <div class="big">{{sleepDuration}}</div>
-      <p class="sub">{{lastSleep}}</p>
-      <div class="row home-sleep-actions">
-        <a class="btn w" href="#sono" style="text-decoration:none">Histórico</a>
+    <div class="home-activity-grid">
+      <article class="home-tile home-tile-workout">
+        <div class="home-tile-heading">
+          <span class="home-tile-icon">{{workoutIcon}}</span>
+          <span class="home-tile-label">Treinos</span>
+        </div>
+        <div class="home-workout-summary">
+          <strong>{{dayWorkoutCount}}</strong>
+          <div>
+            <h3>{{workoutDayTitle}}</h3>
+            <p>{{workoutDayDescription}}</p>
+          </div>
+        </div>
+        <a class="home-tile-link" href="#treinos">Ver treinos <span aria-hidden="true">→</span></a>
+      </article>
+
+      <article class="home-tile home-tile-sleep">
+        <div class="home-tile-heading">
+          <span class="home-tile-icon">{{sleepIcon}}</span>
+          <span class="home-tile-label">Sono</span>
+        </div>
+        <strong class="home-tile-value">{{sleepDuration}}</strong>
+        <p class="home-tile-detail">{{sleepQuality}}</p>
+        <a class="home-tile-link" href="#sono">Ver histórico <span aria-hidden="true">→</span></a>
+      </article>
+
+      <article class="home-tile home-tile-food">
+        <div class="home-tile-heading">
+          <span class="home-tile-icon">{{foodIcon}}</span>
+          <span class="home-tile-label">Alimentação</span>
+        </div>
+        <strong class="home-tile-value">{{mealCount}}</strong>
+        <p class="home-tile-detail">{{mealSummary}}</p>
+        <div class="home-food-action">{{mealAction}}</div>
+      </article>
+
+      <article class="home-tile home-tile-progress">
+        <div class="home-progress-copy">
+          <div class="home-tile-heading">
+            <span class="home-tile-icon">{{progressIcon}}</span>
+            <span class="home-tile-label">Evolução</span>
+          </div>
+          <div class="home-progress-value">
+            <strong>{{workoutCount}}</strong>
+            <span>treinos nesta semana</span>
+          </div>
+          <a class="home-tile-link" href="#evolucao">Acompanhar evolução <span aria-hidden="true">→</span></a>
+        </div>
+        <div class="home-week-dots" aria-label="{{activeDayCount}} dias ativos nesta semana">
+          {{activeDayDots}}
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="home-recent" aria-labelledby="home-recent-title">
+    <div class="home-section-heading">
+      <div>
+        <h2 id="home-recent-title">Atividades recentes</h2>
+        <p>Seu caminho, um dia de cada vez.</p>
       </div>
     </div>
-    <div class="c">
-      <h2>Evolução</h2>
-      <p class="sub">Peso mais recente</p>
-      <div class="big">{{latestWeight}}</div>
-      <div class="row home-progress-actions">
-        <a class="btn s" href="#evolucao" style="text-decoration:none">Ver evolução</a>
-      </div>
-    </div>
-  </div>
-  <div class="c">
-    <h2>Atividades recentes</h2>
-    {{recentActivities}}
-  </div>
+    <div class="home-recent-list">{{recentActivities}}</div>
+  </section>
 </div>

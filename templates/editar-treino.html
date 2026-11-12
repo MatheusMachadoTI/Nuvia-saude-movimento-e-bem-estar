@@ -1,12 +1,29 @@
 <div class="page">
-  <div class="top">
-    <div class="row">
-      <a class="btn s ic" href="#treinos" aria-label="Voltar">{{backIcon}}</a>
+  <header class="workout-editor-header">
+    <a class="workout-back-link" href="#treinos" aria-label="Voltar para treinos">{{backIcon}}</a>
+    <div>
+      <p>ORGANIZE SEU PLANO</p>
       <h1 class="edit-workout-title">{{workoutName}}</h1>
     </div>
-  </div>
-  <div class="c">
+  </header>
+  <section class="workout-editor-section" aria-labelledby="workout-data-title">
+    <div class="workouts-section-heading">
+      <div>
+        <h2 id="workout-data-title">Sobre o treino</h2>
+        <p>Nome, categoria e anotações.</p>
+      </div>
+    </div>
+    {{workoutFields}}
+  </section>
+  <section class="workout-editor-section" aria-labelledby="exercise-list-title">
+    <div class="workouts-section-heading">
+      <div>
+        <h2 id="exercise-list-title">Exercícios <span>{{exerciseCount}}</span></h2>
+        <p>Toque nas setas para mudar a ordem.</p>
+      </div>
+    </div>
     {{exerciseFields}}
     <div class="editor-add-action">{{addExerciseButton}}</div>
-  </div>
+  </section>
+  <p class="workout-autosave-note">{{savedIcon}} Alterações salvas automaticamente neste aparelho.</p>
 </div>

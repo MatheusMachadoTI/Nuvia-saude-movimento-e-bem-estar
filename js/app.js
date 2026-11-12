@@ -1,8 +1,10 @@
 import { loadData, saveData } from './data.js';
-import { renderPage } from './pages.js';
+import { getWorkoutCategory, renderPage, workoutCategories } from './pages.js';
 import {
   days,
+  button,
   escapeHtml as e,
+  formatDate,
   formatHours,
   icon,
   minutesBetween,
@@ -29,6 +31,10 @@ let data = loadData();
 let photos = [];
 let runningWorkout = null;
 let editingWorkoutId = null;
+let selectedHomeDay = today;
+let workoutCategoryFilter = 'Todos';
+let workoutHistoryExpanded = false;
+let workoutClockTimer;
 let toastTimer;
 
 function showToast(message) {
@@ -40,11 +46,15 @@ function showToast(message) {
 }
 
 function setTheme() {
+  const dark = data.dark === null
+    ? window.matchMedia('(prefers-color-scheme:dark)').matches
+    : data.dark;
   if (data.dark === null) {
     document.documentElement.removeAttribute('data-t');
   } else {
-    document.documentElement.dataset.t = data.dark ? 'dark' : 'light';
+    document.documentElement.dataset.t = dark ? 'dark' : 'light';
   }
+  document.querySelector('meta[name="theme-color"]').content = dark ? '#141414' : '#F5F5F5';
 }
 
 function openModal(title, fields, onSave, ok = 'Salvar') {
@@ -55,11 +65,13 @@ function openModal(title, fields, onSave, ok = 'Salvar') {
         ${fields.map(field => `
           <label for="f_${e(field[0])}">
             ${e(field[1])}
-            ${field[2] === 'sel'
-              ? `<select id="f_${e(field[0])}">${field[4].map(option =>
+            ${field[2] === 'textarea'
+              ? `<textarea id="f_${e(field[0])}" rows="3" maxlength="500">${e(field[3] ?? '')}</textarea>`
+              : field[2] === 'sel'
+                ? `<select id="f_${e(field[0])}">${field[4].map(option =>
                 `<option ${option === field[3] ? 'selected' : ''}>${e(option)}</option>`,
               ).join('')}</select>`
-              : `<input id="f_${e(field[0])}" type="${e(field[2])}" value="${e(field[3] ?? '')}"${field[2] === 'number' ? ' step="any"' : ''}>`}
+                : `<input id="f_${e(field[0])}" type="${e(field[2])}" value="${e(field[3] ?? '')}"${field[2] === 'number' ? ' step="any"' : ''}>`}
           </label>
         `).join('')}
         <div class="row modal-actions">
@@ -75,32 +87,104 @@ function openModal(title, fields, onSave, ok = 'Salvar') {
     fields.forEach(field => { values[field[0]] = document.getElementById(`f_${field[0]}`).value; });
     if (onSave(values) !== false) $('#o').innerHTML = '';
   };
-  const first = $('#o input, #o select');
+  const first = $('#o input, #o select, #o textarea');
   if (first) first.focus();
 }
 
-function showWorkoutComplete(name, exercises, series) {
+function formatSessionDuration(minutes) {
+  const totalMinutes = Math.max(0, Math.round(minutes));
+  if (!totalMinutes) return 'Menos de 1 min';
+  return totalMinutes < 60
+    ? `${totalMinutes} min`
+    : `${Math.floor(totalMinutes / 60)}h ${String(totalMinutes % 60).padStart(2, '0')}min`;
+}
+
+function updateWorkoutClock() {
+  const clock = $('#workout-session-clock');
+  if (!clock || !runningWorkout?.startedAt) return;
+  const elapsedMinutes = Math.floor((Date.now() - runningWorkout.startedAt) / 60000);
+  clock.textContent = formatSessionDuration(elapsedMinutes);
+}
+
+function showWorkoutSummary(summary) {
   $('#o').innerHTML = `
     <div class="ov">
-      <div class="md completion-modal" role="dialog" aria-modal="true" aria-label="Treino concluído">
-        <div class="av completion-icon">${icon('check', 38)}</div>
-        <h2>Treino concluído!</h2>
-        <p class="sub">${e(name)}</p>
-        <p class="completion-summary"><b>${exercises}</b> exercícios · <b>${series}</b> séries</p>
-        <button class="btn" id="return-to-workouts">Voltar aos treinos</button>
-      </div>
+      <form class="md workout-summary-modal" id="workout-summary-form" role="dialog" aria-modal="true" aria-labelledby="workout-summary-title">
+        <div class="av completion-icon">${icon('check', 34)}</div>
+        <span class="workout-summary-eyebrow">SESSÃO CONCLUÍDA</span>
+        <h2 id="workout-summary-title">${e(summary.name)}</h2>
+        <div class="workout-summary-grid">
+          <div><span>Data</span><strong>${e(formatDate(today))}</strong></div>
+          <div><span>Duração</span><strong>${e(formatSessionDuration(summary.durationMinutes))}</strong></div>
+          <div><span>Exercícios</span><strong>${summary.exercisesCompleted} de ${summary.totalExercises}</strong></div>
+          ${summary.seriesCompleted
+            ? `<div><span>Séries marcadas</span><strong>${summary.seriesCompleted} de ${summary.totalSeries}</strong></div>`
+            : ''}
+        </div>
+        <label for="workout-summary-notes">Observações <span>(opcional)</span></label>
+        <textarea id="workout-summary-notes" rows="3" maxlength="500" placeholder="Como foi o treino?"></textarea>
+        <div class="row modal-actions">
+          <button class="btn" type="submit">Salvar no histórico</button>
+          <button class="btn s" type="button" id="workout-summary-back">Voltar à sessão</button>
+        </div>
+      </form>
     </div>`;
-  $('#return-to-workouts').onclick = () => {
+  $('#workout-summary-back').onclick = () => {
+    $('#o').innerHTML = '';
+  };
+  $('#workout-summary-form').onsubmit = event => {
+    event.preventDefault();
+    const notes = $('#workout-summary-notes').value.trim();
+    data.hist.unshift({
+      id: newId(),
+      workoutId: summary.workoutId,
+      d: today,
+      nome: summary.name,
+      categoria: summary.category,
+      n: summary.exercisesCompleted,
+      seriesCompleted: summary.seriesCompleted,
+      durationMinutes: summary.durationMinutes,
+      observacoes: notes,
+      status: 'concluído',
+    });
+    saveData(data);
+    runningWorkout = null;
     $('#o').innerHTML = '';
     window.location.hash = 'treinos';
+    showToast('Treino salvo no histórico');
   };
 }
 
 const actions = {
+  selectDay(day) {
+    selectedHomeDay = day;
+    render();
+  },
+  filtrarTreinos(category) {
+    workoutCategoryFilter = category;
+    render();
+  },
+  historial() {
+    workoutHistoryExpanded = !workoutHistoryExpanded;
+    render();
+  },
   novoTreino() {
-    openModal('Nova planilha', [['n', 'Nome da planilha', 'text', '']], values => {
-      if (!values.n.trim()) return false;
-      const workout = { id: newId(), nome: values.n.trim(), ex: [] };
+    openModal('Criar treino', [
+      ['n', 'Nome do treino', 'text', ''],
+      ['categoria', 'Grupo muscular ou categoria', 'sel', 'Sem categoria', workoutCategories],
+      ['observacoes', 'Observações (opcional)', 'textarea', ''],
+    ], values => {
+      if (!values.n.trim()) {
+        showToast('Informe um nome para o treino.');
+        return false;
+      }
+      const workout = {
+        id: newId(),
+        nome: values.n.trim(),
+        categoria: values.categoria,
+        observacoes: values.observacoes.trim(),
+        ex: [],
+      };
       data.treinos.push(workout);
       saveData(data);
       editingWorkoutId = workout.id;
@@ -108,11 +192,22 @@ const actions = {
     }, 'Criar');
   },
   editar(id) {
+    if (runningWorkout?.id === id) {
+      if (!window.confirm('Sair do acompanhamento sem salvar para editar este treino?')) return;
+      runningWorkout = null;
+    }
+    $('#o').innerHTML = '';
     editingWorkoutId = id;
     window.location.hash = 'editar';
   },
   delT(id) {
-    if (!window.confirm('Excluir esta planilha?')) return;
+    const hasActiveSession = runningWorkout?.id === id;
+    const message = hasActiveSession
+      ? 'Excluir esta planilha e encerrar o acompanhamento em andamento?'
+      : 'Excluir esta planilha?';
+    if (!window.confirm(message)) return;
+    $('#o').innerHTML = '';
+    if (hasActiveSession) runningWorkout = null;
     data.treinos = data.treinos.filter(workout => workout.id !== id);
     saveData(data);
     render();
@@ -121,7 +216,7 @@ const actions = {
   addEx() {
     const workout = data.treinos.find(item => item.id === editingWorkoutId);
     if (!workout) return;
-    workout.ex.push({ n: 'Novo exercício', s: 3, r: 10, c: 0 });
+    workout.ex.push({ n: 'Novo exercício', s: 3, r: 10, c: 0, observacoes: '' });
     saveData(data);
     render();
   },
@@ -132,39 +227,66 @@ const actions = {
     saveData(data);
     render();
   },
-  mov(index) {
+  mov(index, target) {
     const workout = data.treinos.find(item => item.id === editingWorkoutId);
     const position = Number(index);
-    if (!workout || position < 1) return;
-    [workout.ex[position - 1], workout.ex[position]] = [workout.ex[position], workout.ex[position - 1]];
+    const nextPosition = position + (target.dataset.dir === 'down' ? 1 : -1);
+    if (!workout || nextPosition < 0 || nextPosition >= workout.ex.length) return;
+    [workout.ex[position], workout.ex[nextPosition]] = [workout.ex[nextPosition], workout.ex[position]];
     saveData(data);
     render();
   },
   iniciar(id) {
     const workout = data.treinos.find(item => item.id === id);
     if (!workout) return;
-    runningWorkout = { id, done: {} };
+    $('#o').innerHTML = '';
+    runningWorkout = { id, done: {}, skipped: [], startedAt: Date.now() };
     window.location.hash = 'exec';
   },
   tgl(key) {
     if (!runningWorkout) return;
+    const exerciseIndex = Number(key.split('-')[0]);
+    if (runningWorkout.skipped.includes(exerciseIndex)) return;
     runningWorkout.done[key] = !runningWorkout.done[key];
+    render();
+  },
+  pularEx(index) {
+    if (!runningWorkout) return;
+    const exerciseIndex = Number(index);
+    if (!runningWorkout.skipped.includes(exerciseIndex)) runningWorkout.skipped.push(exerciseIndex);
+    render();
+  },
+  retomarEx(index) {
+    if (!runningWorkout) return;
+    runningWorkout.skipped = runningWorkout.skipped.filter(item => item !== Number(index));
     render();
   },
   fim() {
     const workout = data.treinos.find(item => item.id === runningWorkout?.id);
     if (!workout) return;
-    const totalSeries = workout.ex.reduce((total, exercise) => total + exercise.s, 0);
+    const totalSeries = workout.ex.reduce((total, exercise) => total + (Number(exercise.s) || 0), 0);
     const completedSeries = Object.values(runningWorkout.done).filter(Boolean).length;
+    const skipped = new Set(runningWorkout.skipped);
     const completedExercises = completedSeries
       ? workout.ex.filter((exercise, exerciseIndex) =>
-        [...Array(exercise.s)].every((_, seriesIndex) => runningWorkout.done[`${exerciseIndex}-${seriesIndex}`]),
+        !skipped.has(exerciseIndex)
+          && Number(exercise.s) > 0
+          && Array.from({ length: Number(exercise.s) || 0 }, (_, seriesIndex) =>
+            runningWorkout.done[`${exerciseIndex}-${seriesIndex}`],
+          ).every(Boolean),
       ).length
-      : workout.ex.length;
-    data.hist.unshift({ d: today, nome: workout.nome, n: completedExercises });
-    saveData(data);
-    runningWorkout = null;
-    showWorkoutComplete(workout.nome, completedExercises, completedSeries || totalSeries);
+      : workout.ex.filter((_, exerciseIndex) => !skipped.has(exerciseIndex)).length;
+    const durationMinutes = Math.floor(Math.max(0, Date.now() - runningWorkout.startedAt) / 60000);
+    showWorkoutSummary({
+      workoutId: workout.id,
+      name: workout.nome,
+      category: getWorkoutCategory(workout),
+      totalExercises: workout.ex.length,
+      totalSeries,
+      exercisesCompleted: completedExercises,
+      seriesCompleted: completedSeries,
+      durationMinutes,
+    });
   },
   sair() {
     runningWorkout = null;
@@ -274,8 +396,9 @@ function render() {
   }
 
   const activeSection = activeRoutes[route] || route;
+  document.body.dataset.page = route;
   $('#nav').innerHTML = `<div class="lg">Maré</div>${navItems.map(([key, label, iconName]) =>
-    `<a href="#${key}" class="${key === activeSection ? 'on' : ''}"${key === activeSection ? ' aria-current="page"' : ''}>${icon(iconName, 22)}${label}</a>`,
+    `<a href="#${key}" class="${key === activeSection ? 'on' : ''}"${key === activeSection ? ' aria-current="page"' : ''}>${icon(iconName, 22)}<span class="nav-label">${e(label)}</span></a>`,
   ).join('')}`;
 
   const weekSleep = data.sono.filter(sleep => sleep.d >= days[0]);
@@ -287,11 +410,14 @@ function render() {
     data,
     days,
     today,
+    selectedHomeDay,
     weekSleep,
     exerciseDays,
     lastSleep,
     workout: route === 'exec' ? sessionWorkout : workout,
     session: runningWorkout,
+    workoutCategoryFilter,
+    workoutHistoryExpanded,
     photos,
     dark: data.dark === null
       ? window.matchMedia('(prefers-color-scheme:dark)').matches
@@ -300,11 +426,25 @@ function render() {
   const focusedId = document.activeElement?.id;
   $('#m').innerHTML = renderPage(route, context);
   if (focusedId) document.getElementById(focusedId)?.focus();
+  window.clearInterval(workoutClockTimer);
+  workoutClockTimer = null;
+  if (route === 'exec' && runningWorkout) {
+    updateWorkoutClock();
+    workoutClockTimer = window.setInterval(updateWorkoutClock, 1000);
+  }
 }
 
 document.addEventListener('click', event => {
   const target = event.target.closest('[data-a]');
   if (target && actions[target.dataset.a]) actions[target.dataset.a](target.dataset.i, target);
+});
+
+document.addEventListener('keydown', event => {
+  if (event.key !== 'Enter' && event.key !== ' ') return;
+  const card = event.target.closest('.workout-card[role="button"]');
+  if (!card || card !== event.target) return;
+  event.preventDefault();
+  card.click();
 });
 
 document.addEventListener('change', event => {
@@ -319,11 +459,61 @@ document.addEventListener('change', event => {
     reader.onerror = () => showToast('Não foi possível carregar a foto.');
     reader.readAsDataURL(target.files[0]);
   }
+  if (target.dataset.wf) {
+    const workout = data.treinos.find(item => item.id === editingWorkoutId);
+    if (!workout) return;
+    if (target.dataset.wf === 'nome') {
+      const name = target.value.trim();
+      if (!name) {
+        target.value = workout.nome;
+        showToast('O nome do treino não pode ficar vazio.');
+        return;
+      }
+      const previousName = workout.nome;
+      data.hist.forEach(item => {
+        if (!item.workoutId && item.nome === previousName) item.workoutId = workout.id;
+      });
+      workout.nome = name;
+      const title = document.querySelector('.edit-workout-title');
+      if (title) title.textContent = name;
+    } else if (target.dataset.wf === 'categoria') {
+      workout.categoria = target.value;
+    } else {
+      workout.observacoes = target.value.trim();
+    }
+    saveData(data);
+    return;
+  }
   if (target.dataset.f) {
     const workout = data.treinos.find(item => item.id === editingWorkoutId);
     const exercise = workout?.ex[Number(target.dataset.k)];
     if (!exercise) return;
-    exercise[target.dataset.f] = target.type === 'number' ? +target.value : target.value;
+    if (target.dataset.f === 'n' && !target.value.trim()) {
+      target.value = exercise.n;
+      showToast('Informe o nome do exercício.');
+      return;
+    }
+    if (target.dataset.f === 'n') {
+      const editorCard = target.closest('.exercise-editor-card');
+      editorCard?.querySelectorAll('[data-dir]').forEach(button => {
+        const direction = button.dataset.dir === 'down' ? 'para baixo' : 'para cima';
+        button.setAttribute('aria-label', `Mover exercício ${target.value.trim()} ${direction}`);
+      });
+    }
+    if ((target.dataset.f === 's' || target.dataset.f === 'r')
+      && (!Number.isInteger(Number(target.value)) || Number(target.value) < 1)) {
+      target.value = exercise[target.dataset.f];
+      showToast('Séries e repetições devem ser maiores que zero.');
+      return;
+    }
+    if (target.dataset.f === 'c' && target.value !== '' && Number(target.value) < 0) {
+      target.value = exercise.c || '';
+      showToast('A carga não pode ser negativa.');
+      return;
+    }
+    exercise[target.dataset.f] = target.type === 'number'
+      ? target.value === '' ? 0 : Number(target.value)
+      : target.value.trim();
     saveData(data);
   }
 });
