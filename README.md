@@ -89,21 +89,19 @@ A interface utiliza uma combinação de cores contrastantes, com azul-marinho co
 
 ## Tecnologias utilizadas
 
-- **React** — construção da interface.
-- **Vite** — ambiente de desenvolvimento.
-- **JavaScript** — lógica e interatividade.
+- **JavaScript** — lógica, templates e interatividade.
+- **Vite** — servidor local e build dos templates HTML.
 - **CSS** — estilização e responsividade.
 - **SVG** — ícones da interface.
 
 ## Organização do front-end
 
-- `index.html` contém o elemento raiz onde o React é montado.
-- `src/main.jsx` inicia o React e carrega os estilos.
-- `src/App.jsx` controla o estado, a navegação e as ações compartilhadas.
-- `src/pages/` contém as telas: Início, Treinos, Evolução, Perfil, Alimentação e Sono.
-- `src/components/` reúne elementos reutilizados, como botões, ícones, gráficos e modal.
-- `src/data/` guarda os dados iniciais e o carregamento do armazenamento local.
-- `src/utils/` contém funções reutilizáveis de datas e horários.
+- `index.html` contém a estrutura fixa e os links para CSS e JavaScript.
+- `templates/` guarda os arquivos HTML de cada tela.
+- `js/app.js` controla estado, navegação e interações.
+- `js/pages.js` preenche os templates HTML com os dados do usuário.
+- `js/data.js` guarda os dados iniciais e o carregamento do armazenamento local.
+- `js/utils.js` contém funções reutilizáveis de datas, ícones e gráficos.
 - `css/base.css` reúne variáveis de tema, layout e componentes compartilhados; os outros arquivos organizam estilos específicos.
 
 ## Execução do projeto
@@ -140,6 +138,8 @@ npm run dev
 ```
 
 Após iniciar, acesse o endereço disponibilizado pelo Vite no terminal.
+
+O projeto usa o Vite para servir os arquivos HTML e carregar os templates. Não abra o `index.html` diretamente pelo explorador de arquivos.
 
 Para gerar a versão otimizada para publicação:
 

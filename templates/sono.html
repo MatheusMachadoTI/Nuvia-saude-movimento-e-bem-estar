@@ -1,0 +1,27 @@
+<div class="page">
+  <div class="top">
+    <div>
+      <h1>Sono</h1>
+      <p class="sub">Acompanhamento simples</p>
+    </div>
+    {{addSleepButton}}
+  </div>
+  <div class="grid">
+    <div class="c lv">
+      <p class="sub">Média de horas</p>
+      <div class="big">{{averageSleep}}</div>
+    </div>
+    <div class="c pt">
+      <p class="sub">Noites satisfatórias</p>
+      <div class="big">{{goodNights}}<span class="sleep-total"> de {{totalNights}}</span></div>
+    </div>
+  </div>
+  <div class="c sleep-chart-card">
+    <h2>Últimos 7 dias</h2>
+    {{sleepChart}}
+  </div>
+  <div class="c">
+    <h2>Registros</h2>
+    {{sleepRecords}}
+  </div>
+</div>

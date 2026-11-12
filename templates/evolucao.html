@@ -1,0 +1,55 @@
+<div class="page page-progress">
+  <div class="top">
+    <div>
+      <h1>Evolução</h1>
+      <p class="sub">Resumo da semana</p>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="c pt">
+      <p class="sub">Dias de treino</p>
+      <div class="big">{{trainingDays}}</div>
+      <p class="sub">{{weeklyWorkouts}} treinos concluídos</p>
+    </div>
+    <div class="c lv">
+      <p class="sub">Sono satisfatório</p>
+      <div class="big">{{goodSleepDays}}</div>
+      <p class="sub">{{averageSleep}}</p>
+    </div>
+    <div class="c mt">
+      <p class="sub">Refeições</p>
+      <div class="big">{{weeklyMeals}}</div>
+      <p class="sub">registradas na semana</p>
+    </div>
+    <div class="c tq">
+      <p class="sub">Peso</p>
+      <div class="big">{{latestWeight}}</div>
+      <p class="sub">último registro</p>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="c">
+      <h2>Frequência de treinos</h2>
+      {{trainingChart}}
+    </div>
+    <div class="c">
+      <h2>Horas de sono</h2>
+      {{sleepChart}}
+    </div>
+  </div>
+  <div class="c progress-weight-card">
+    <div class="row sp">
+      <h2>Peso corporal</h2>
+      {{registerWeightButton}}
+    </div>
+    {{weightChart}}
+  </div>
+  <div class="c">
+    <div class="row sp">
+      <h2>Fotos de progresso</h2>
+      {{addPhotoButton}}
+      <input id="fi" type="file" accept="image/*" hidden>
+    </div>
+    {{photoGallery}}
+  </div>
+</div>

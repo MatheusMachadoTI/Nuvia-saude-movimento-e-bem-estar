@@ -27,3 +27,16 @@
 .page-profile .sw.on:after {
   left: 23px;
 }
+
+.page-profile .profile-name {
+  margin: 0;
+}
+
+.page-profile .profile-edit-action {
+  margin-top: 16px;
+}
+
+.page-profile .profile-note {
+  margin-top: 12px;
+  text-align: center;
+}

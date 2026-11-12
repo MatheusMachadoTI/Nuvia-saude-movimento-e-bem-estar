@@ -410,3 +410,28 @@ label {
   font-weight: 800;
   color: #fff;
 }
+
+.sleep-total {
+  font-size: 18px;
+}
+
+.sleep-chart-card {
+  margin-bottom: 16px;
+}
+
+.modal-actions {
+  margin-top: 18px;
+}
+
+.completion-modal {
+  text-align: center;
+}
+
+.completion-icon {
+  margin: 0 auto 12px;
+  background: var(--tq);
+}
+
+.completion-summary {
+  margin: 12px 0;
+}

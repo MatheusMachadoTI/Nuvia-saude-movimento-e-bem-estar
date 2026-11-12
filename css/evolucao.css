@@ -17,3 +17,7 @@
   object-fit: cover;
   display: block;
 }
+
+.page-progress .progress-weight-card {
+  margin-bottom: 16px;
+}

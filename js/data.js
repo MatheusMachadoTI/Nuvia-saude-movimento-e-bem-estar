@@ -1,4 +1,4 @@
-import { ago, today } from '../utils/date.js';
+import { ago, today } from './utils.js';
 
 export const storageKey = 'mare-v1';
 
@@ -11,25 +11,17 @@ export function createInitialData() {
     notif: true,
     priv: true,
     treinos: [
-      {
-        id: 'a',
-        nome: 'Treino A — Peito e Tríceps',
-        ex: [
-          { n: 'Supino reto', s: 3, r: 12, c: 30 },
-          { n: 'Supino inclinado', s: 3, r: 10, c: 24 },
-          { n: 'Crucifixo', s: 3, r: 12, c: 12 },
-          { n: 'Tríceps corda', s: 3, r: 12, c: 20 },
-        ],
-      },
-      {
-        id: 'b',
-        nome: 'Treino B — Costas e Bíceps',
-        ex: [
-          { n: 'Puxada frontal', s: 3, r: 12, c: 40 },
-          { n: 'Remada curvada', s: 3, r: 10, c: 28 },
-          { n: 'Rosca direta', s: 3, r: 12, c: 14 },
-        ],
-      },
+      { id: 'a', nome: 'Treino A — Peito e Tríceps', ex: [
+        { n: 'Supino reto', s: 3, r: 12, c: 30 },
+        { n: 'Supino inclinado', s: 3, r: 10, c: 24 },
+        { n: 'Crucifixo', s: 3, r: 12, c: 12 },
+        { n: 'Tríceps corda', s: 3, r: 12, c: 20 },
+      ] },
+      { id: 'b', nome: 'Treino B — Costas e Bíceps', ex: [
+        { n: 'Puxada frontal', s: 3, r: 12, c: 40 },
+        { n: 'Remada curvada', s: 3, r: 10, c: 28 },
+        { n: 'Rosca direta', s: 3, r: 12, c: 14 },
+      ] },
     ],
     hist: [
       { d: ago(1), nome: 'Treino A — Peito e Tríceps', n: 4 },
@@ -48,8 +40,8 @@ export function createInitialData() {
       [3, '23:40', '06:20', 2],
       [4, '22:50', '06:40', 3],
       [5, '01:00', '07:10', 1],
-    ].map(([daysAgo, start, end, quality]) => ({
-      d: ago(daysAgo),
+    ].map(([offset, start, end, quality]) => ({
+      d: ago(offset),
       a: start,
       b: end,
       q: quality,
@@ -72,9 +64,18 @@ export function createInitialData() {
 export function loadData() {
   try {
     const saved = localStorage.getItem(storageKey);
-    return saved ? { ...createInitialData(), ...JSON.parse(saved) } : createInitialData();
+    if (!saved) return createInitialData();
+    return { ...createInitialData(), ...JSON.parse(saved) };
   } catch (error) {
     console.error('Não foi possível carregar os dados salvos.', error);
     return createInitialData();
+  }
+}
+
+export function saveData(data) {
+  try {
+    localStorage.setItem(storageKey, JSON.stringify(data));
+  } catch (error) {
+    console.error('Não foi possível salvar os dados.', error);
   }
 }

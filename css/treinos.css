@@ -28,3 +28,41 @@
   border-radius: 9px;
   transition: width .3s;
 }
+
+.edit-workout-title {
+  font-size: 22px;
+}
+
+.editor-add-action {
+  margin-top: 14px;
+}
+
+.workout-session-header {
+  position: sticky;
+  top: 8px;
+  z-index: 5;
+  margin-bottom: 16px;
+}
+
+.workout-session-progress {
+  margin-top: 12px;
+}
+
+.exercise-session-card {
+  margin-bottom: 12px;
+}
+
+.finish-workout-button {
+  flex: 1;
+  justify-content: center;
+  min-height: 56px;
+  font-size: 17px;
+}
+
+.session-hint {
+  margin-top: 8px;
+}
+
+.exercise-editor {
+  display: block;
+}

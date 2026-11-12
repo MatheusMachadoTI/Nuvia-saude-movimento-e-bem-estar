@@ -23,3 +23,15 @@
 .page-home .dot.on b {
   background: #fff;
 }
+
+.page-home .next-workout {
+  display: block;
+  margin: 10px 0 14px;
+  font-weight: 600;
+}
+
+.page-home .home-meal-actions,
+.page-home .home-sleep-actions,
+.page-home .home-progress-actions {
+  margin-top: 14px;
+}

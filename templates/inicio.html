@@ -1,0 +1,51 @@
+<div class="page page-home">
+  <div class="top">
+    <div>
+      <h1>{{greeting}}, {{firstName}}</h1>
+      <p class="sub">{{date}}</p>
+    </div>
+  </div>
+  <div class="grid">
+    <div class="c pt" style="grid-column:1/-1">
+      <h2>Sua semana</h2>
+      <p class="sub">{{weekSummary}}</p>
+      <div class="dots">{{weekDays}}</div>
+    </div>
+    <div class="c tq">
+      <h2>Treinos</h2>
+      <div class="big">{{workoutCount}}</div>
+      <p class="sub">treinos nesta semana</p>
+      <p class="next-workout">{{nextWorkout}}</p>
+      {{startWorkoutButton}}
+    </div>
+    <div class="c mt">
+      <h2>Alimentação</h2>
+      <div class="big">{{mealCount}}</div>
+      <p class="sub">refeições registradas hoje</p>
+      <div class="row home-meal-actions">
+        {{addMealButton}}
+        <a class="btn s" href="#alimentacao" style="text-decoration:none">Ver dia</a>
+      </div>
+    </div>
+    <div class="c lv">
+      <h2>Sono</h2>
+      <div class="big">{{sleepDuration}}</div>
+      <p class="sub">{{lastSleep}}</p>
+      <div class="row home-sleep-actions">
+        <a class="btn w" href="#sono" style="text-decoration:none">Histórico</a>
+      </div>
+    </div>
+    <div class="c">
+      <h2>Evolução</h2>
+      <p class="sub">Peso mais recente</p>
+      <div class="big">{{latestWeight}}</div>
+      <div class="row home-progress-actions">
+        <a class="btn s" href="#evolucao" style="text-decoration:none">Ver evolução</a>
+      </div>
+    </div>
+  </div>
+  <div class="c">
+    <h2>Atividades recentes</h2>
+    {{recentActivities}}
+  </div>
+</div>
