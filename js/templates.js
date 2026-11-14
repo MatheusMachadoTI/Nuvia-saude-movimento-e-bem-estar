@@ -6,6 +6,8 @@ import food from '../templates/alimentacao.html?raw';
 import sleep from '../templates/sono.html?raw';
 import workoutEditor from '../templates/editar-treino.html?raw';
 import workoutSession from '../templates/executar-treino.html?raw';
+import foodDetails from '../templates/detalhe-refeicao.html?raw';
+import activities from '../templates/atividades.html?raw';
 
 export default {
   inicio: home,
@@ -16,4 +18,6 @@ export default {
   sono: sleep,
   editar: workoutEditor,
   exec: workoutSession,
+  detalheRefeicao: foodDetails,
+  atividades: activities,
 };

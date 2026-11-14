@@ -19,7 +19,11 @@ export const icons = {
   cal: '<rect x="3" y="4" width="18" height="18" rx="3"/><path d="M16 2v4M8 2v4M3 10h18"/>',
 };
 
-export const iso = date => date.toISOString().slice(0, 10);
+export const iso = date => [
+  date.getFullYear(),
+  String(date.getMonth() + 1).padStart(2, '0'),
+  String(date.getDate()).padStart(2, '0'),
+].join('-');
 
 export const ago = days => {
   const date = new Date();

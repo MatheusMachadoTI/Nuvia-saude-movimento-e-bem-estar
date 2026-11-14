@@ -1,5 +1,5 @@
 import { loadData, saveData } from './data.js';
-import { getWorkoutCategory, renderPage, workoutCategories } from './pages.js';
+import { getWorkoutCategory, getWorkoutMuscles, renderPage } from './pages.js';
 import {
   days,
   button,
@@ -16,6 +16,7 @@ const $ = selector => document.querySelector(selector);
 const navItems = [
   ['inicio', 'Início', 'home'],
   ['treinos', 'Treinos', 'dumb'],
+  ['alimentacao', 'Alimentação', 'food'],
   ['evolucao', 'Evolução', 'chart'],
   ['perfil', 'Perfil', 'user'],
 ];
@@ -23,7 +24,9 @@ const activeRoutes = {
   treinos: 'treinos',
   editar: 'treinos',
   exec: 'treinos',
-  alimentacao: 'inicio',
+  alimentacao: 'alimentacao',
+  'detalhe-refeicao': 'alimentacao',
+  atividades: 'inicio',
   sono: 'inicio',
 };
 
@@ -34,6 +37,7 @@ let editingWorkoutId = null;
 let selectedHomeDay = today;
 let workoutCategoryFilter = 'Todos';
 let workoutHistoryExpanded = false;
+let selectedMealId = null;
 let workoutClockTimer;
 let toastTimer;
 
@@ -43,6 +47,26 @@ function showToast(message) {
   toastTimer = window.setTimeout(() => {
     $('#t').innerHTML = '';
   }, 2000);
+}
+
+function updateMealStatus(id, status) {
+  const meal = data.refeicoes.find(item => item.id === id);
+  if (!meal) return;
+  const log = data.refs.find(item => item.templateId === id && item.d === today);
+  if (log) {
+    log.status = status;
+  } else {
+    data.refs.unshift({
+      ...meal,
+      id: newId(),
+      templateId: meal.id,
+      d: today,
+      status,
+      observacao: '',
+    });
+  }
+  saveData(data);
+  render();
 }
 
 function setTheme() {
@@ -171,7 +195,6 @@ const actions = {
   novoTreino() {
     openModal('Criar treino', [
       ['n', 'Nome do treino', 'text', ''],
-      ['categoria', 'Grupo muscular ou categoria', 'sel', 'Sem categoria', workoutCategories],
       ['observacoes', 'Observações (opcional)', 'textarea', ''],
     ], values => {
       if (!values.n.trim()) {
@@ -181,7 +204,6 @@ const actions = {
       const workout = {
         id: newId(),
         nome: values.n.trim(),
-        categoria: values.categoria,
         observacoes: values.observacoes.trim(),
         ex: [],
       };
@@ -199,6 +221,23 @@ const actions = {
     $('#o').innerHTML = '';
     editingWorkoutId = id;
     window.location.hash = 'editar';
+  },
+  toggleGrupo(group) {
+    const workout = data.treinos.find(item => item.id === editingWorkoutId);
+    if (!workout) return;
+    const selected = getWorkoutMuscles(workout);
+    const groups = selected.includes(group)
+      ? selected.filter(item => item !== group)
+      : [...selected, group];
+    const baseName = String(workout.nomeBase || workout.nome)
+      .replace(/\s*[—–-]\s*.+$/, '')
+      .trim() || 'Treino';
+    workout.gruposMusculares = groups;
+    workout.categoria = groups.join(' e ') || 'Sem categoria';
+    workout.nomeBase = baseName;
+    workout.nome = groups.length ? `${baseName} — ${groups.join(' e ')}` : baseName;
+    saveData(data);
+    render();
   },
   delT(id) {
     const hasActiveSession = runningWorkout?.id === id;
@@ -292,23 +331,139 @@ const actions = {
     runningWorkout = null;
     window.location.hash = 'treinos';
   },
-  refeicao() {
-    openModal('Registrar refeição', [
-      ['t', 'O que você comeu?', 'text', ''],
-      ['tipo', 'Tipo', 'sel', 'Almoço', ['Café da manhã', 'Almoço', 'Lanche', 'Jantar']],
-      ['h', 'Horário (opcional)', 'time', new Date().toTimeString().slice(0, 5)],
+  refeicao(id) {
+    const meal = id ? data.refeicoes.find(item => item.id === id) : null;
+    openModal(meal ? 'Editar refeição' : 'Registrar refeição', [
+      ['tipo', 'Tipo', 'sel', meal?.tipo || 'Almoço', ['Café da manhã', 'Almoço', 'Lanche', 'Jantar']],
+      ['t', 'O que você comeu?', 'text', meal?.t || ''],
+      ['qtd', 'Quantidade ou porção', 'text', meal?.qtd || '1 porção'],
+      ['h', 'Horário', 'time', meal?.h || new Date().toTimeString().slice(0, 5)],
+      ['cal', 'Calorias', 'number', meal?.cal ?? 0],
+      ['p', 'Proteínas (g)', 'number', meal?.p ?? 0],
+      ['c', 'Carboidratos (g)', 'number', meal?.c ?? 0],
+      ['g', 'Gorduras (g)', 'number', meal?.g ?? 0],
     ], values => {
-      if (!values.t.trim()) return false;
-      data.refs.unshift({ id: newId(), t: values.t.trim(), tipo: values.tipo, h: values.h, d: today });
+      if (!values.t.trim() || !values.qtd.trim()) {
+        showToast('Informe o alimento e a quantidade ou porção.');
+        return false;
+      }
+      const nutritionValues = [values.cal, values.p, values.c, values.g].map(Number);
+      if (nutritionValues.some(value => !Number.isFinite(value) || value < 0)) {
+        showToast('Calorias e macros devem ser valores iguais ou maiores que zero.');
+        return false;
+      }
+      const nextMeal = {
+        id: meal?.id || newId(),
+        t: values.t.trim(),
+        qtd: values.qtd.trim(),
+        tipo: values.tipo,
+        h: values.h || '',
+        cal: nutritionValues[0],
+        p: nutritionValues[1],
+        c: nutritionValues[2],
+        g: nutritionValues[3],
+      };
+      if (meal) {
+        const index = data.refeicoes.findIndex(item => item.id === meal.id);
+        if (index >= 0) data.refeicoes[index] = nextMeal;
+        const todayLog = data.refs.find(item => item.templateId === meal.id && item.d === today);
+        if (todayLog) {
+          Object.assign(todayLog, nextMeal, {
+            id: todayLog.id,
+            templateId: meal.id,
+            d: today,
+            status: todayLog.status,
+            observacao: todayLog.observacao || '',
+          });
+        }
+      } else {
+        data.refeicoes.unshift(nextMeal);
+      }
       saveData(data);
       render();
-      showToast('Refeição registrada');
-    });
+      showToast(meal ? 'Refeição atualizada' : 'Refeição registrada');
+    }, meal ? 'Salvar' : 'Registrar');
+  },
+  abrirRefeicao(id) {
+    if (!data.refeicoes.some(meal => meal.id === id)) return;
+    selectedMealId = id;
+    window.location.hash = `detalhe-refeicao?id=${encodeURIComponent(id)}`;
   },
   delR(id) {
+    data.refeicoes = data.refeicoes.filter(meal => meal.id !== id);
+    data.refs = data.refs.filter(meal => !(meal.templateId === id && meal.d === today));
+    saveData(data);
+    render();
+    showToast('Refeição excluída do planejamento');
+  },
+  concluirR(id) {
+    updateMealStatus(id, 'feito');
+    showToast('Refeição marcada como feita');
+  },
+  pularR(id) {
+    updateMealStatus(id, 'pulado');
+    showToast('Refeição marcada como pulada');
+  },
+  desfazerR(id) {
+    data.refs = data.refs.filter(meal => !(meal.templateId === id && meal.d === today));
+    saveData(data);
+    render();
+    showToast('Registro do dia desfeito');
+  },
+  observacaoR(id) {
+    const log = data.refs.find(meal => meal.templateId === id && meal.d === today);
+    if (!log) return;
+    openModal('Observação da refeição', [
+      ['observacao', 'Observação (opcional)', 'textarea', log.observacao || ''],
+    ], values => {
+      log.observacao = values.observacao.trim();
+      saveData(data);
+      render();
+      showToast('Observação salva');
+    });
+  },
+  editarHistorico(id) {
+    const meal = data.refs.find(item => item.id === id);
+    if (!meal) return;
+    openModal('Editar registro', [
+      ['tipo', 'Tipo', 'sel', meal.tipo, ['Café da manhã', 'Almoço', 'Lanche', 'Jantar']],
+      ['t', 'O que você comeu?', 'text', meal.t],
+      ['qtd', 'Quantidade ou porção', 'text', meal.qtd || '1 porção'],
+      ['h', 'Horário', 'time', meal.h || ''],
+      ['cal', 'Calorias', 'number', meal.cal ?? 0],
+      ['p', 'Proteínas (g)', 'number', meal.p ?? 0],
+      ['c', 'Carboidratos (g)', 'number', meal.c ?? 0],
+      ['g', 'Gorduras (g)', 'number', meal.g ?? 0],
+    ], values => {
+      if (!values.t.trim() || !values.qtd.trim()) {
+        showToast('Informe o alimento e a quantidade ou porção.');
+        return false;
+      }
+      const nutritionValues = [values.cal, values.p, values.c, values.g].map(Number);
+      if (nutritionValues.some(value => !Number.isFinite(value) || value < 0)) {
+        showToast('Calorias e macros devem ser valores iguais ou maiores que zero.');
+        return false;
+      }
+      Object.assign(meal, {
+        t: values.t.trim(),
+        tipo: values.tipo,
+        qtd: values.qtd.trim(),
+        h: values.h,
+        cal: nutritionValues[0],
+        p: nutritionValues[1],
+        c: nutritionValues[2],
+        g: nutritionValues[3],
+      });
+      saveData(data);
+      render();
+      showToast('Registro atualizado');
+    });
+  },
+  delHistorico(id) {
     data.refs = data.refs.filter(meal => meal.id !== id);
     saveData(data);
     render();
+    showToast('Registro excluído do histórico');
   },
   dormir() {
     openModal('Registrar sono', [
@@ -382,16 +537,24 @@ const actions = {
 };
 
 function render() {
-  const requestedRoute = (window.location.hash || '#inicio').slice(1);
-  const route = ['inicio', 'treinos', 'editar', 'exec', 'evolucao', 'alimentacao', 'sono', 'perfil'].includes(requestedRoute)
+  const [requestedRoute, routeQuery = ''] = (window.location.hash || '#inicio').slice(1).split('?');
+  const route = ['inicio', 'treinos', 'editar', 'exec', 'evolucao', 'alimentacao', 'detalhe-refeicao', 'atividades', 'sono', 'perfil'].includes(requestedRoute)
     ? requestedRoute
     : 'inicio';
+  if (route === 'detalhe-refeicao') {
+    selectedMealId = new URLSearchParams(routeQuery).get('id') || selectedMealId;
+  }
   if (route === 'editar' && !data.treinos.some(workout => workout.id === editingWorkoutId)) {
     window.location.hash = 'treinos';
     return;
   }
   if (route === 'exec' && !runningWorkout) {
     window.location.hash = 'treinos';
+    return;
+  }
+  const selectedMeal = data.refeicoes.find(meal => meal.id === selectedMealId);
+  if (route === 'detalhe-refeicao' && !selectedMeal) {
+    window.location.hash = 'alimentacao';
     return;
   }
 
@@ -416,6 +579,8 @@ function render() {
     lastSleep,
     workout: route === 'exec' ? sessionWorkout : workout,
     session: runningWorkout,
+    meal: selectedMeal,
+    todayLog: data.refs.find(item => item.templateId === selectedMealId && item.d === today),
     workoutCategoryFilter,
     workoutHistoryExpanded,
     photos,
@@ -432,6 +597,12 @@ function render() {
     updateWorkoutClock();
     workoutClockTimer = window.setInterval(updateWorkoutClock, 1000);
   }
+}
+
+function scheduleDailyRefresh() {
+  const now = new Date();
+  const nextDay = new Date(now.getFullYear(), now.getMonth(), now.getDate() + 1, 0, 0, 100);
+  window.setTimeout(() => window.location.reload(), nextDay.getTime() - now.getTime());
 }
 
 document.addEventListener('click', event => {
@@ -473,9 +644,13 @@ document.addEventListener('change', event => {
       data.hist.forEach(item => {
         if (!item.workoutId && item.nome === previousName) item.workoutId = workout.id;
       });
-      workout.nome = name;
+      const groups = getWorkoutMuscles(workout);
+      const baseName = name.replace(/\s*[—–-]\s*.+$/, '').trim() || name;
+      workout.nomeBase = baseName;
+      workout.nome = groups.length ? `${baseName} — ${groups.join(' e ')}` : name;
+      target.value = workout.nome;
       const title = document.querySelector('.edit-workout-title');
-      if (title) title.textContent = name;
+      if (title) title.textContent = workout.nome;
     } else if (target.dataset.wf === 'categoria') {
       workout.categoria = target.value;
     } else {
@@ -525,3 +700,4 @@ window.addEventListener('hashchange', () => {
 
 setTheme();
 render();
+scheduleDailyRefresh();

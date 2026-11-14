@@ -47,7 +47,7 @@ function renderHome({ data, today, selectedHomeDay }) {
   const weekSleep = data.sono.filter(sleep => sleep.d >= weekStart && sleep.d <= weekEnd);
   const selectedWorkouts = data.hist.filter(workout => workout.d === selectedDay);
   const selectedSleep = data.sono.find(sleep => sleep.d === selectedDay);
-  const selectedMeals = data.refs.filter(meal => meal.d === selectedDay);
+  const selectedMeals = data.refs.filter(meal => meal.d === selectedDay && meal.status === 'feito');
   const nextWorkout = data.treinos[0];
   const firstName = String(data.nome || '').trim().split(/\s+/)[0] || 'por aqui';
   const mealTypes = [...new Set(selectedMeals.map(meal => meal.tipo))];
@@ -72,11 +72,19 @@ function renderHome({ data, today, selectedHomeDay }) {
     : selectedDay === today
       ? 'Registre sua primeira refeição'
       : 'Nenhuma refeição registrada';
-  const recentActivities = data.hist.length
-    ? data.hist.slice(0, 3).map(item =>
-      `<div class="li"><span>${e(item.nome)}</span><span class="tag">${formatDate(item.d)}</span></div>`,
+  const dayActivities = [
+    ...data.hist.filter(item => item.d === today).map(item => ({ label: item.nome, type: 'Treino' })),
+    ...data.refs.filter(item => item.d === today).map(item => ({
+      label: `${item.tipo}: ${item.t}`,
+      type: item.status === 'pulado' ? 'Pulada' : 'Alimentação',
+    })),
+    ...data.sono.filter(item => item.d === today).map(item => ({ label: 'Sono registrado', type: 'Sono' })),
+  ];
+  const recentActivities = dayActivities.length
+    ? dayActivities.slice(0, 3).map(item =>
+      `<div class="li"><span>${e(item.label)}</span><span class="tag">${e(item.type)}</span></div>`,
     ).join('')
-    : empty('dumb', 'Seus treinos concluídos aparecem aqui.');
+    : empty('cal', 'As atividades registradas hoje aparecerão aqui.');
 
   return fillTemplate(templates.inicio, {
     greeting: e(greeting),
@@ -114,7 +122,7 @@ function renderHome({ data, today, selectedHomeDay }) {
     mealCount: String(selectedMeals.length),
     mealSummary: selectedMealSummary,
     mealAction: selectedDay === today
-      ? button('refeicao', 'Registrar refeição', 'plus', 'home-meal-button')
+      ? '<a class="home-tile-link home-meal-button" href="#alimentacao">Registrar refeição <span aria-hidden="true">→</span></a>'
       : '<a class="home-tile-link" href="#alimentacao">Ver diário <span aria-hidden="true">→</span></a>',
     progressIcon: icon('chart', 18),
     workoutCount: String(weekWorkouts.length),
@@ -126,21 +134,22 @@ function renderHome({ data, today, selectedHomeDay }) {
   });
 }
 
-export const workoutCategories = [
-  'Sem categoria',
-  'Peito e tríceps',
-  'Costas e bíceps',
-  'Pernas',
+export const workoutMuscleGroups = [
+  'Peito',
+  'Tríceps',
+  'Costas',
+  'Bíceps',
   'Ombros',
+  'Perna',
+  'Posterior de coxa',
+  'Glúteos',
+  'Panturrilhas',
+  'Abdômen',
+  'Antebraço',
   'Cardio',
-  'Corpo inteiro',
 ];
 
-export function getWorkoutCategory(workout) {
-  if (workout.categoria) return workout.categoria;
-  const inferred = String(workout.nome || '').match(/[—–-]\s*(.+)$/);
-  return inferred ? inferred[1] : 'Sem categoria';
-}
+export const workoutCategories = ['Sem categoria', ...workoutMuscleGroups];
 
 function categoryKey(category) {
   return String(category)
@@ -149,6 +158,32 @@ function categoryKey(category) {
     .replace(/[\u0300-\u036f]/g, '')
     .replace(/\s+/g, ' ')
     .toLocaleLowerCase('pt-BR');
+}
+
+function canonicalMuscleGroups(value) {
+  const knownGroups = new Map(workoutMuscleGroups.map(group => [categoryKey(group), group]));
+  const legacyAliases = new Map([['pernas', 'Perna']]);
+  return String(value)
+    .split(/\s*(?:,| e )\s*/i)
+    .map(group => group.trim())
+    .filter(Boolean)
+    .map(group => knownGroups.get(categoryKey(group)) || legacyAliases.get(categoryKey(group)) || group);
+}
+
+export function getWorkoutMuscles(workout) {
+  if (Array.isArray(workout.gruposMusculares)) {
+    return [...new Set(workout.gruposMusculares.map(group => canonicalMuscleGroups(group)[0]).filter(Boolean))];
+  }
+  const category = String(workout.categoria || '').trim();
+  const inferred = workout.nomeBase ? null : String(workout.nome || '').match(/[—–-]\s*(.+)$/);
+  const value = category && categoryKey(category) !== categoryKey('Sem categoria')
+    ? category
+    : inferred ? inferred[1] : '';
+  return canonicalMuscleGroups(value);
+}
+
+export function getWorkoutCategory(workout) {
+  return getWorkoutMuscles(workout).join(' e ') || 'Sem categoria';
 }
 
 function totalWorkoutSets(workout) {
@@ -308,19 +343,29 @@ function renderWorkouts({ data, historyExpanded, workoutCategoryFilter = 'Todos'
 
 function renderWorkoutEditor({ workout }) {
   if (!workout) return '';
-  const category = getWorkoutCategory(workout);
-  const categories = [...new Set([...workoutCategories, category])];
-  const categoryOptions = categories.map(option =>
-    `<option value="${e(option)}"${option === category ? ' selected' : ''}>${e(option)}</option>`,
-  ).join('');
+  const selectedMuscles = getWorkoutMuscles(workout);
+  const muscleOptions = [...new Set([
+    ...workoutMuscleGroups,
+    ...selectedMuscles.filter(group => !workoutMuscleGroups.includes(group)),
+  ])].map(group => `
+    <button class="workout-muscle-option${selectedMuscles.includes(group) ? ' is-selected' : ''}"
+      type="button" data-a="toggleGrupo" data-i="${e(group)}"
+      aria-pressed="${selectedMuscles.includes(group)}">${e(group)}</button>
+  `).join('');
   const workoutFields = `
     <div class="workout-editor-fields">
       <label>Nome do treino
         <input data-wf="nome" value="${e(workout.nome)}" maxlength="80" aria-label="Nome do treino">
       </label>
-      <label>Grupo muscular ou categoria
-        <select data-wf="categoria" aria-label="Grupo muscular ou categoria">${categoryOptions}</select>
-      </label>
+      <div class="workout-muscle-field">
+        <span class="workout-muscle-label">Grupos musculares <small>Escolha um ou mais</small></span>
+        <div class="workout-muscle-options" role="group" aria-label="Grupos musculares">
+          ${muscleOptions}
+        </div>
+        <p class="workout-muscle-selected">${selectedMuscles.length
+          ? `Selecionados: ${e(selectedMuscles.join(' e '))}`
+          : 'Nenhum grupo selecionado'}</p>
+      </div>
       <label>Observações do treino <span>(opcional)</span>
         <textarea data-wf="observacoes" rows="3" maxlength="500" aria-label="Observações do treino">${e(workout.observacoes || '')}</textarea>
       </label>
@@ -451,7 +496,7 @@ function renderProgress({ data, days, weekSleep, exerciseDays, photos }) {
     weeklyWorkouts: data.hist.filter(item => item.d >= days[0]).length,
     goodSleepDays: weekSleep.filter(sleep => sleep.q >= 2).length,
     averageSleep: weekSleep.length ? `média de ${formatHours(averageSleep)}` : 'sem registros',
-    weeklyMeals: data.refs.filter(meal => meal.d >= days[0]).length,
+    weeklyMeals: data.refs.filter(meal => meal.d >= days[0] && meal.status === 'feito').length,
     latestWeight: latestWeight ? `${e(latestWeight.v)} kg` : '—',
     trainingChart: bars(exerciseDays.map(Number), days.map(formatWeekday), 'var(--green)', 1),
     sleepChart,
@@ -465,39 +510,203 @@ function renderProgress({ data, days, weekSleep, exerciseDays, photos }) {
 }
 
 function renderFood({ data, today }) {
-  const todayMeals = data.refs
-    .filter(meal => meal.d === today)
+  const todayMeals = [...(data.refeicoes || [])]
     .sort((first, second) => (first.h || '').localeCompare(second.h || ''));
+  const todayLogs = data.refs.filter(meal => meal.d === today);
+  const logsByMeal = new Map(todayLogs.map(meal => [meal.templateId, meal]));
   const olderMeals = data.refs
     .filter(meal => meal.d !== today)
     .sort((first, second) => second.d.localeCompare(first.d));
-  const colors = ['mt', 'tq', 'lv', 'pt'];
-  const card = (meal, color) => `
-    <div class="c ${color}" style="padding:16px">
-      <div class="row sp">
+
+  const mealCalories = meal => Number(meal.cal) || 0;
+  const mealMacros = meal => ({
+    protein: Number(meal.p) || 0,
+    carb: Number(meal.c) || 0,
+    fat: Number(meal.g) || 0,
+  });
+
+  const totals = todayLogs
+    .filter(meal => meal.status === 'feito')
+    .reduce((summary, meal) => {
+      const calories = mealCalories(meal);
+      const macros = mealMacros(meal);
+      summary.calories += calories;
+      summary.protein += macros.protein;
+      summary.carb += macros.carb;
+      summary.fat += macros.fat;
+      return summary;
+    }, { calories: 0, protein: 0, carb: 0, fat: 0 });
+
+  const dailyGoal = 2100;
+  const progressPercent = Math.min(100, Math.round((totals.calories / dailyGoal) * 100) || 0);
+  const macroGrams = totals.protein + totals.carb + totals.fat;
+  const macroTotal = macroGrams || 1;
+  const proteinShare = Math.round((totals.protein / macroTotal) * 100);
+  const fatShare = Math.round((totals.fat / macroTotal) * 100);
+  const carbShare = Math.max(0, 100 - proteinShare - fatShare);
+  const macroChart = totals.protein + totals.carb + totals.fat
+    ? `conic-gradient(var(--pt) 0 ${proteinShare}%, var(--mt) ${proteinShare}% ${proteinShare + carbShare}%, var(--tq) ${proteinShare + carbShare}% 100%)`
+    : 'var(--g1)';
+
+  const mealPlan = todayMeals.length
+    ? todayMeals.map(meal => {
+      const log = logsByMeal.get(meal.id);
+      return `
+      <div class="food-plan-item">
+        <span class="food-plan-time">${e(meal.h || '—')}</span>
         <div>
-          <span class="tag">${e(meal.tipo)}${meal.h ? ` · ${e(meal.h)}` : ''}</span>
-          <p style="margin-top:8px;font-weight:600">${e(meal.t)}</p>
+          <strong>${e(meal.tipo)}</strong>
+          <small>${e(meal.t)} · ${e(meal.qtd || '1 porção')}</small>
         </div>
-        <button class="btn s ic" data-a="delR" data-i="${e(meal.id)}" aria-label="Remover">${icon('trash', 16)}</button>
-      </div>
-    </div>`;
+        <span class="food-plan-status">${log?.status === 'feito' ? 'Feita' : log?.status === 'pulado' ? 'Pulada' : 'Pendente'}</span>
+      </div>`;
+    }).join('')
+    : `<div class="food-empty-state">${empty('food', 'Seu planejamento aparece aqui após registrar uma refeição.')}</div>`;
+
+  const mealCard = (meal, index) => {
+    const status = logsByMeal.get(meal.id)?.status || 'pendente';
+    const statusLabel = status === 'feito' ? 'Feita' : status === 'pulado' ? 'Pulada' : 'Pendente';
+    return `
+      <button class="food-meal-card food-card-tone-${index % 5} is-${status}" type="button"
+        data-a="abrirRefeicao" data-i="${e(meal.id)}"
+        aria-label="Abrir ${e(meal.tipo)}: ${e(meal.t)}, ${statusLabel}">
+        <span class="food-card-type">${e(meal.tipo)}</span>
+        <span class="food-meal-copy">
+          <strong>${e(meal.t)}</strong>
+          <small>${e(meal.h || 'Sem horário')} · ${statusLabel}</small>
+        </span>
+        <span class="food-meal-open" aria-hidden="true">${icon(status === 'feito' ? 'check' : 'down', 18)}</span>
+      </button>`;
+  };
+
   const todayMarkup = todayMeals.length
-    ? todayMeals.map((meal, index) => card(meal, colors[index % colors.length])).join('')
-    : `<div class="c" style="grid-column:1/-1">${empty('food', 'Nenhuma refeição hoje.')}</div>`;
+    ? todayMeals.map(mealCard).join('')
+    : `<div class="food-empty-state full-width">${empty('food', 'Nenhuma refeição registrada hoje.')}</div>`;
+
   const historyMarkup = olderMeals.length
     ? olderMeals.map(meal => `
-      <div class="c" style="padding:16px">
-        <span class="tag">${formatDate(meal.d)} · ${e(meal.tipo)}</span>
-        <p style="margin-top:8px">${e(meal.t)}</p>
+      <div class="food-history-card">
+        <div>
+          <span class="food-date">${formatDate(meal.d)}</span>
+          <strong>${e(meal.tipo)}</strong>
+          <span class="food-history-status">${meal.status === 'pulado' ? 'Pulada' : 'Feita'}</span>
+          <div class="food-history-actions">
+            ${button('editarHistorico', '', 'edit', 'ic food-inline-action', meal.id, 'Editar')}
+            ${button('delHistorico', '', 'trash', 'ic food-inline-action', meal.id, 'Excluir')}
+          </div>
+        </div>
+        <p>${e(meal.t)} · ${e(meal.qtd || '1 porção')}</p>
+        <small>${mealCalories(meal)} kcal</small>
+        ${meal.observacao ? `<p class="food-observation">${e(meal.observacao)}</p>` : ''}
       </div>
     `).join('')
-    : `<div class="c" style="grid-column:1/-1">${empty('cal', 'O histórico aparece aqui.')}</div>`;
+    : `<div class="food-empty-state full-width">${empty('cal', 'O histórico de refeições aparece aqui.')}</div>`;
 
   return fillTemplate(templates.alimentacao, {
-    addMealButton: button('refeicao', 'Registrar refeição', 'plus'),
+    avatar: e(String(data.nome || 'A').trim()[0] || 'A'),
+    firstName: e(String(data.nome || 'Perfil').trim().split(/\s+/)[0]),
+    addMealButton: `<button class="btn food-cta" type="button" data-a="refeicao" aria-label="Registrar refeição">${icon('plus', 18)}Registrar</button>`,
+    dailyCalories: `${totals.calories} kcal`,
+    dailyGoal: `${dailyGoal} kcal`,
+    progressPercent: String(progressPercent),
+    macroGrams: String(macroGrams),
+    macroChart,
+    proteinValue: `${totals.protein}g`,
+    carbValue: `${totals.carb}g`,
+    fatValue: `${totals.fat}g`,
+    proteinShare: String(proteinShare || 0),
+    carbShare: String(carbShare || 0),
+    fatShare: String(fatShare || 0),
+    mealCount: `${todayMeals.length} ${todayMeals.length === 1 ? 'refeição' : 'refeições'}`,
     todayMeals: todayMarkup,
+    mealPlan,
     mealHistory: historyMarkup,
+  });
+}
+
+function renderFoodDetails({ meal, todayLog }) {
+  if (!meal) return '';
+  const status = todayLog?.status || 'pendente';
+  const statusLabel = status === 'feito' ? 'Feita' : status === 'pulado' ? 'Pulada' : 'Pendente';
+  const actions = status === 'feito'
+    ? button('observacaoR', 'Observação', 'edit', 'food-action-secondary', meal.id)
+      + button('pularR', 'Pular refeição', 'x', 'food-action-secondary', meal.id)
+      + button('desfazerR', 'Desfazer status', 'back', 'food-action-secondary', meal.id)
+    : status === 'pulado'
+      ? button('concluirR', 'Marcar como feita', 'check', 'food-action-primary', meal.id)
+        + button('desfazerR', 'Desfazer status', 'back', 'food-action-secondary', meal.id)
+      : button('concluirR', 'Marcar como feita', 'check', 'food-action-primary', meal.id)
+        + button('pularR', 'Pular refeição', 'x', 'food-action-secondary', meal.id);
+
+  return fillTemplate(templates.detalheRefeicao, {
+    backIcon: icon('back', 18),
+    mealType: e(meal.tipo),
+    mealName: e(meal.t),
+    mealStatus: statusLabel,
+    mealStatusClass: status,
+    mealTime: e(meal.h || 'Sem horário'),
+    mealQuantity: e(meal.qtd || '1 porção'),
+    mealCalories: String(Number(meal.cal) || 0),
+    mealProtein: String(Number(meal.p) || 0),
+    mealCarbs: String(Number(meal.c) || 0),
+    mealFat: String(Number(meal.g) || 0),
+    observation: todayLog?.observacao
+      ? `<p class="food-detail-observation"><strong>Observação</strong>${e(todayLog.observacao)}</p>`
+      : '',
+    statusActions: actions,
+    editButton: button('refeicao', 'Editar refeição', 'edit', 'food-detail-edit', meal.id),
+    deleteButton: button('delR', 'Excluir refeição', 'trash', 'food-detail-delete', meal.id),
+  });
+}
+
+function renderActivities({ data, today }) {
+  const workouts = data.hist.filter(item => item.d === today);
+  const meals = data.refs.filter(item => item.d === today && item.status !== 'pendente');
+  const sleep = data.sono.find(item => item.d === today);
+  const mealMarkup = meals.map(meal => `
+    <article class="activity-card activity-card-food">
+      <span class="activity-card-icon">${icon('food', 20)}</span>
+      <div class="activity-card-copy">
+        <small>${e(meal.tipo)} · ${meal.status === 'pulado' ? 'Pulada' : 'Feita'}${meal.h ? ` · ${e(meal.h)}` : ''}</small>
+        <h3>${e(meal.t)}</h3>
+        <p>${e(meal.qtd || '1 porção')} · ${Number(meal.cal) || 0} kcal</p>
+      </div>
+    </article>
+  `).join('');
+  const workoutMarkup = workouts.map(workout => `
+    <article class="activity-card activity-card-workout">
+      <span class="activity-card-icon">${icon('dumb', 20)}</span>
+      <div class="activity-card-copy">
+        <small>Treino concluído</small>
+        <h3>${e(workout.nome)}</h3>
+        <p>${Number(workout.n) || 0} ${(Number(workout.n) || 0) === 1 ? 'exercício' : 'exercícios'}${workout.durationMinutes ? ` · ${e(formatWorkoutDuration(workout.durationMinutes))}` : ''}</p>
+      </div>
+    </article>
+  `).join('');
+  const sleepMarkup = sleep ? `
+    <article class="activity-card activity-card-sleep">
+      <span class="activity-card-icon">${icon('moon', 20)}</span>
+      <div class="activity-card-copy">
+        <small>Sono registrado · ${e(sleepLabels[sleep.q] || 'Sem avaliação')}</small>
+        <h3>${e(formatHours(duration(sleep)))}</h3>
+        <p>${e(sleep.a)} – ${e(sleep.b)}</p>
+      </div>
+    </article>
+  ` : '';
+  const count = workouts.length + meals.length + (sleep ? 1 : 0);
+  const content = count
+    ? `${workoutMarkup}${mealMarkup}${sleepMarkup}`
+    : `<div class="activity-empty">${empty('cal', 'Ainda não há atividades registradas hoje.')}</div>`;
+
+  return fillTemplate(templates.atividades, {
+    backIcon: icon('back', 18),
+    activityDate: e(new Date(`${today}T12:00:00`).toLocaleDateString('pt-BR', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+    })),
+    activitySummary: `${count} ${count === 1 ? 'atividade registrada' : 'atividades registradas'}`,
+    activityContent: content,
   });
 }
 
@@ -563,6 +772,8 @@ export function renderPage(route, context) {
     evolucao: renderProgress,
     perfil: renderProfile,
     alimentacao: renderFood,
+    'detalhe-refeicao': renderFoodDetails,
+    atividades: renderActivities,
     sono: renderSleep,
     editar: renderWorkoutEditor,
     exec: renderWorkoutSession,

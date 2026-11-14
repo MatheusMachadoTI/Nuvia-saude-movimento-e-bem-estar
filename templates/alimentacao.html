@@ -1,13 +1,79 @@
-<div class="page">
-  <div class="top">
+<div class="food-page">
+  <header class="food-header top">
+    <a class="home-avatar" href="#perfil" aria-label="Abrir perfil de {{firstName}}">{{avatar}}</a>
     <div>
+      <p class="eyebrow">Seu dia</p>
       <h1>Alimentação</h1>
-      <p class="sub">Sem contar calorias, só registrar</p>
     </div>
     {{addMealButton}}
-  </div>
-  <h2>Hoje</h2>
-  <div class="grid">{{todayMeals}}</div>
-  <h2>Histórico</h2>
-  <div class="grid">{{mealHistory}}</div>
+  </header>
+
+  <section class="food-summary-card c pt">
+    <div class="food-summary-top">
+      <div>
+        <span class="food-label">Resumo diário</span>
+        <strong class="food-total">{{dailyCalories}}</strong>
+      </div>
+      <span class="food-goal">Meta {{dailyGoal}} · {{progressPercent}}%</span>
+    </div>
+    <div class="food-progress" role="progressbar" aria-label="Progresso da meta diária de calorias"
+      aria-valuemin="0" aria-valuemax="100" aria-valuenow="{{progressPercent}}">
+      <span style="width: {{progressPercent}}%"></span>
+    </div>
+    <div class="food-macro-summary">
+      <div>
+        <strong>{{proteinValue}}</strong>
+        <small>Proteína</small>
+      </div>
+      <div>
+        <strong>{{carbValue}}</strong>
+        <small>Carbo</small>
+      </div>
+      <div>
+        <strong>{{fatValue}}</strong>
+        <small>Gordura</small>
+      </div>
+    </div>
+  </section>
+
+  <section class="food-panel">
+    <div class="food-panel-card">
+      <div class="food-ring" style="background: {{macroChart}}" role="img" aria-label="Distribuição de macros: {{proteinShare}}% proteína, {{carbShare}}% carboidratos e {{fatShare}}% gorduras">
+        <div class="food-ring-inner">
+          <strong>{{macroGrams}}g</strong>
+          <small>no dia</small>
+        </div>
+      </div>
+      <div class="food-panel-copy">
+        <h2>Distribuição</h2>
+        <ul class="food-macro-list">
+          <li><span class="food-macro-name"><span class="dot dot-protein"></span>Proteínas</span><strong>{{proteinShare}}%</strong></li>
+          <li><span class="food-macro-name"><span class="dot dot-carb"></span>Carboidratos</span><strong>{{carbShare}}%</strong></li>
+          <li><span class="food-macro-name"><span class="dot dot-fat"></span>Gorduras</span><strong>{{fatShare}}%</strong></li>
+        </ul>
+      </div>
+    </div>
+  </section>
+
+  <section class="food-section">
+    <div class="food-section-head">
+      <h2>Refeições do dia</h2>
+      <span>{{mealCount}}</span>
+    </div>
+    <div class="food-meals-list">{{todayMeals}}</div>
+  </section>
+
+  <section class="food-section">
+    <div class="food-section-head">
+      <h2>Planejamento</h2>
+    </div>
+    <div class="food-plan">{{mealPlan}}</div>
+  </section>
+
+  <section class="food-section">
+    <div class="food-section-head">
+      <h2>Histórico</h2>
+    </div>
+    <div class="food-history">{{mealHistory}}</div>
+  </section>
 </div>

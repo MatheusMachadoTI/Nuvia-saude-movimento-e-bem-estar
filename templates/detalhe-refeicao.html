@@ -1,0 +1,27 @@
+<div class="food-page food-detail-page">
+  <header class="food-detail-header">
+    <a class="food-back-link" href="#alimentacao">{{backIcon}}<span>Alimentação</span></a>
+    <span class="food-detail-type">{{mealType}}</span>
+    <h1>{{mealName}}</h1>
+    <span class="food-detail-status is-{{mealStatusClass}}">{{mealStatus}}</span>
+  </header>
+
+  <section class="food-detail-card">
+    <div class="food-detail-meta">
+      <div><small>Horário</small><strong>{{mealTime}}</strong></div>
+      <div><small>Quantidade</small><strong>{{mealQuantity}}</strong></div>
+    </div>
+    <div class="food-detail-nutrition">
+      <div><strong>{{mealCalories}}</strong><span>kcal</span></div>
+      <div><strong>{{mealProtein}}g</strong><span>Proteínas</span></div>
+      <div><strong>{{mealCarbs}}g</strong><span>Carboidratos</span></div>
+      <div><strong>{{mealFat}}g</strong><span>Gorduras</span></div>
+    </div>
+    {{observation}}
+  </section>
+
+  <section class="food-detail-actions" aria-label="Ações da refeição">
+    <div class="food-detail-status-actions">{{statusActions}}</div>
+    <div class="food-detail-management">{{editButton}}{{deleteButton}}</div>
+  </section>
+</div>

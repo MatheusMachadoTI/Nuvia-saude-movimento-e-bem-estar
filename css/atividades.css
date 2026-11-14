@@ -1,0 +1,126 @@
+body[data-page="atividades"] main {
+  max-width: 720px;
+  padding: calc(20px + env(safe-area-inset-top, 0px)) 20px calc(132px + env(safe-area-inset-bottom, 0px));
+}
+
+.page-activities {
+  width: 100%;
+  max-width: 560px;
+  margin: 0 auto;
+}
+
+.activities-header {
+  display: grid;
+  justify-items: start;
+  gap: 8px;
+  margin: 0 2px 20px;
+}
+
+.activity-back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  color: var(--mu);
+  font-size: 13px;
+  font-weight: 700;
+  text-decoration: none;
+}
+
+.activity-back-link:focus-visible,
+.home-recent-link:focus-visible,
+.home-recent h2 a:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+.activities-header .eyebrow {
+  margin: 0;
+  text-transform: capitalize;
+}
+
+.activities-header h1 {
+  font-size: 26px;
+}
+
+.activities-summary {
+  color: var(--mu);
+  font-size: 13px;
+}
+
+.activities-list {
+  display: grid;
+  gap: 10px;
+}
+
+.activity-card {
+  display: flex;
+  min-width: 0;
+  align-items: center;
+  gap: 13px;
+  padding: 15px;
+  border-radius: 20px;
+  background: var(--card);
+  box-shadow: var(--sh);
+}
+
+.activity-card-icon {
+  display: grid;
+  flex: 0 0 42px;
+  width: 42px;
+  height: 42px;
+  place-items: center;
+  border-radius: 15px;
+  background: var(--g1);
+}
+
+.activity-card-workout .activity-card-icon {
+  background: var(--lv);
+  color: var(--az);
+}
+
+.activity-card-food .activity-card-icon {
+  background: var(--tq);
+  color: var(--az);
+}
+
+.activity-card-sleep .activity-card-icon {
+  background: var(--sky);
+  color: var(--az);
+}
+
+.activity-card-copy {
+  min-width: 0;
+}
+
+.activity-card-copy small {
+  color: var(--mu);
+  font-size: 11px;
+}
+
+.activity-card-copy h3 {
+  margin: 2px 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+
+.activity-card-copy p {
+  color: var(--mu);
+  font-size: 12px;
+}
+
+.activity-empty {
+  display: grid;
+  min-height: 150px;
+  place-items: center;
+  border-radius: 22px;
+  background: var(--card);
+  box-shadow: var(--sh);
+}
+
+@media (min-width: 800px) {
+  body[data-page="atividades"] main {
+    max-width: 1120px;
+  }
+}

@@ -541,7 +541,7 @@ body[data-page="exec"] main {
 
 .workout-editor-fields label,
 .exercise-editor-card label {
-  margin: 0 0 13px;
+  margin: 0 0 16px;
   color: var(--tx);
   font-size: 12px;
 }
@@ -557,6 +557,61 @@ body[data-page="exec"] main {
   color: var(--mu);
   font-size: 11px;
   font-weight: 400;
+}
+
+.workout-muscle-field {
+  margin: 0 0 16px;
+}
+
+.workout-muscle-label {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 7px;
+  margin-bottom: 9px;
+  color: var(--tx);
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.workout-muscle-label small {
+  color: var(--mu);
+  font-size: 11px;
+  font-weight: 400;
+}
+
+.workout-muscle-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.workout-muscle-option {
+  min-height: 38px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 999px;
+  background: var(--g1);
+  color: var(--tx);
+  cursor: pointer;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.workout-muscle-option.is-selected {
+  background: var(--mt);
+  color: var(--az);
+}
+
+.workout-muscle-option:focus-visible {
+  outline: 3px solid var(--focus);
+  outline-offset: 2px;
+}
+
+.workout-muscle-selected {
+  margin-top: 9px;
+  color: var(--mu);
+  font-size: 11px;
 }
 
 .workout-editor-fields input,
@@ -633,8 +688,8 @@ body[data-page="exec"] main {
 .exercise-editor-numbers {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 9px;
-  margin-bottom: 13px;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
 .exercise-editor-numbers label {

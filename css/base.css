@@ -155,7 +155,7 @@ main {
     display: grid;
     align-items: center;
     justify-items: center;
-    grid-template-columns: repeat(4, minmax(0, 1fr));
+    grid-template-columns: repeat(5, minmax(0, 1fr));
     gap: 4px;
     height: 68px;
     padding: 8px 10px;
@@ -400,6 +400,13 @@ textarea {
   min-height: 44px;
 }
 
+label input,
+label select,
+label textarea {
+  display: block;
+  margin-top: 6px;
+}
+
 textarea {
   resize: vertical;
 }
@@ -409,7 +416,7 @@ label {
   font-weight: 600;
   color: var(--mu);
   display: block;
-  margin: 10px 0 4px;
+  margin: 14px 0 8px;
 }
 
 .ov {
